@@ -529,7 +529,7 @@ const DB = [
   {s:"File I/O",op:"Read .mat with v7.3 fallback (load_mat robust)",tags:"load mat v7 v73 hdf5 fallback robust load_mat loadmat",
    oct:"% works for all versions\nload('f.mat')",
    py:"import scipy.io, subprocess\n\ndef load_mat(f):\n  try:\n    return scipy.io.loadmat(f)\n  except:\n    f7 = f.replace('.mat','_v7.mat')\n    subprocess.run(['octave','--no-gui','--eval',\n      f\"load('{f}');save('-v7','{f7}');\"])\n    return scipy.io.loadmat(f7)",
-   jl:"# MAT.jl reads all versions including v7.3 (HDF5)\nusing MAT\nd = matread(\"f.mat\")",jlp:""},
+   jl:"using MAT\n\nfunction load_mat(f)\n  try\n    return matread(f)\n  catch\n    f7 = replace(f, \".mat\" => \"_v7.mat\")\n    run(`octave --no-gui --eval \"load('$f'); save('-7', '$f7')\"`)\n    return matread(f7)\n  end\nend",jlp:""},
   {s:"File I/O",op:"Write .txt delimited (dlmwrite)",tags:"dlmwrite savetxt txt write text delimited",
    oct:"dlmwrite('f.txt', A)",py:"np.savetxt('f.txt', A)",jl:"writedlm(\"f.txt\", A, ',')",jlp:""},
   {s:"File I/O",op:"Read .txt delimited (dlmread)",tags:"dlmread loadtxt txt read text delimited",
