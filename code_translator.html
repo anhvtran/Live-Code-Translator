@@ -812,16 +812,38 @@ function showSuggestForLine(lang, lineIdx) {
 }
 
 function selectCandidate(lang, lineIdx, dbIdx) {
-  lineChoices[lineIdx] = dbIdx;
-
-  // *** KEY FIX: update the SOURCE column line too ***
   const srcTa = document.getElementById('ta-' + lang);
   const lines = srcTa.value.split('\n');
-  lines[lineIdx] = DB[dbIdx][lang] || lines[lineIdx];
+
+  // How many lines does the CURRENT entry at lineIdx span?
+  // (A previous selection may have inserted multiple lines)
+  const prevDbIdx = lineChoices[lineIdx];
+  let prevSpan = 1;
+  if (prevDbIdx !== undefined) {
+    const prevCode = DB[prevDbIdx][lang] || '';
+    prevSpan = prevCode.split('\n').length;
+  }
+
+  // New content to insert (may be multiline)
+  const newCode = DB[dbIdx][lang] || lines[lineIdx];
+  const newLines = newCode.split('\n');
+
+  // Replace the old span with the new lines
+  lines.splice(lineIdx, prevSpan, ...newLines);
   srcTa.value = lines.join('\n');
 
-  // Update output cols
-  renderOutputCols(lang, lines);
+  // Update choice — lineIdx is still the anchor line
+  lineChoices[lineIdx] = dbIdx;
+  // Clear any stale choices that fell inside the old span
+  if (prevSpan > 1) {
+    for (let i = lineIdx + 1; i < lineIdx + prevSpan; i++) delete lineChoices[i];
+  }
+
+  // Recompute output cols from the new source lines
+  const newAllLines = srcTa.value.split('\n');
+  // Rebuild lastCandidates to match new line count
+  lastCandidates = newAllLines.map(line => findCandidates(line, lang));
+  renderOutputCols(lang, newAllLines);
 
   // Refresh panel (mark chosen)
   const list = document.getElementById('sp-' + lang + '-list');
@@ -830,7 +852,7 @@ function selectCandidate(lang, lineIdx, dbIdx) {
   });
 
   // Update match counter
-  const nonEmpty = lines.filter(l => l.trim()).length;
+  const nonEmpty = newAllLines.filter(l => l.trim()).length;
   const matched  = Object.keys(lineChoices).filter(k => lineChoices[k] !== undefined).length;
   document.getElementById('mc').textContent = `${matched} / ${nonEmpty} matched`;
   document.getElementById('mc').className = matched > 0 ? 'on' : '';
