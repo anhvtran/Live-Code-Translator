@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Code Translator — Octave · Python · Julia</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+[data-theme="dark"]{
+  --bg:#0a0c12;--bg2:#10131c;--bg3:#181c28;--border:#252a3d;--text:#dde2f5;--muted:#4a5070;--accent:#4ecdc4;
+  --oct:#1dbb8a;--oct-bg:#061d14;--oct-bd:#0d4a30;--oct-c:#5df5c0;
+  --py:#4a9eff;--py-bg:#050f1f;--py-bd:#0a2a55;--py-c:#7bbfff;
+  --jl:#9b8eee;--jl-bg:#0e0c1e;--jl-bd:#2a2360;--jl-c:#c0b8ff;
+  --jlp:#f0a030;--jlp-bg:#180e03;--jlp-bd:#4a2e0a;--jlp-c:#ffc870;
+  --sp-bg:#131620;--sp-bd:#2e3450;--sp-hov:#1e2235;--sp-txt:#7080b0;
+}
+[data-theme="light"]{
+  --bg:#f0f2fa;--bg2:#e6e9f4;--bg3:#dde1f0;--border:#c5cae0;--text:#1a1e30;--muted:#8090b8;--accent:#0a8a80;
+  --oct:#0a7a54;--oct-bg:#d0f5e8;--oct-bd:#80d4b4;--oct-c:#065a3c;
+  --py:#1a5caa;--py-bg:#cce0fc;--py-bd:#5090d4;--py-c:#0c3c7a;
+  --jl:#4a40a0;--jl-bg:#e0ddf8;--jl-bd:#8880c8;--jl-c:#30288a;
+  --jlp:#8a4e00;--jlp-bg:#fbe8bc;--jlp-bd:#d09030;--jlp-c:#6a3a00;
+  --sp-bg:#eef0fa;--sp-bd:#c0c8e0;--sp-hov:#e0e4f5;--sp-txt:#5060a0;
+}
+html,body{height:100%;}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:hidden;}
+
+/* HEADER */
+.hdr{padding:.55rem 1rem;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.brand{font-size:14px;font-weight:700;color:var(--accent);}
+.tagline{font-size:10px;color:var(--muted);margin-left:.4rem;}
+.hdr-r{display:flex;gap:.5rem;align-items:center;}
+#mc{font-size:11px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);padding:2px 9px;border-radius:20px;color:var(--muted);transition:all .2s;}
+#mc.on{color:var(--accent);border-color:var(--accent);}
+.tbtn{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 10px;border-radius:20px;font-size:11px;cursor:pointer;}
+.tbtn:hover{opacity:.7;}
+
+/* HINT BAR */
+.hint{padding:.25rem 1rem;border-bottom:1px solid var(--border);background:var(--bg3);font-size:10px;color:var(--muted);flex-shrink:0;display:flex;justify-content:space-between;align-items:center;}
+
+/* MAIN GRID */
+.grid{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;min-height:0;overflow:hidden;}
+.col{display:flex;flex-direction:column;border-right:1px solid var(--border);min-width:0;overflow:hidden;position:relative;}
+.col:last-child{border-right:none;}
+
+.col-hdr{padding:.4rem .7rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:1px solid;}
+.col-oct .col-hdr{background:var(--oct-bg);border-color:var(--oct-bd);}
+.col-py  .col-hdr{background:var(--py-bg);border-color:var(--py-bd);}
+.col-jl  .col-hdr{background:var(--jl-bg);border-color:var(--jl-bd);}
+.col-jlp .col-hdr{background:var(--jlp-bg);border-color:var(--jlp-bd);}
+
+.lb{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid;}
+.col-oct .lb{color:var(--oct);border-color:var(--oct-bd);}
+.col-py  .lb{color:var(--py);border-color:var(--py-bd);}
+.col-jl  .lb{color:var(--jl);border-color:var(--jl-bd);}
+.col-jlp .lb{color:var(--jlp);border-color:var(--jlp-bd);}
+
+.cbtn{font-size:9px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:3px;padding:1px 6px;cursor:pointer;}
+.cbtn:hover{color:var(--text);}
+
+/* COLUMN BODY */
+.col-body{flex:1;min-height:0;position:relative;overflow:hidden;}
+textarea{
+  position:absolute;inset:0;width:100%;height:100%;
+  background:transparent;color:var(--text);border:none;outline:none;resize:none;
+  font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.85;
+  padding:.6rem .7rem;caret-color:var(--accent);
+}
+textarea::placeholder{color:var(--muted);opacity:.38;}
+.col-oct textarea:focus{box-shadow:inset 3px 0 0 var(--oct);}
+.col-py  textarea:focus{box-shadow:inset 3px 0 0 var(--py);}
+.col-jl  textarea:focus{box-shadow:inset 3px 0 0 var(--jl);}
+.col-jlp textarea:focus{box-shadow:inset 3px 0 0 var(--jlp);}
+.col-oct textarea.out{color:var(--oct-c);}
+.col-py  textarea.out{color:var(--py-c);}
+.col-jl  textarea.out{color:var(--jl-c);}
+.col-jlp textarea.out{color:var(--jlp-c);}
+
+/* SUGGESTION DROPDOWN — floats over the column, anchored below cursor line */
+.sp{
+  position:absolute;left:0;right:0;bottom:0;
+  background:var(--sp-bg);border-top:2px solid var(--accent);
+  z-index:200;max-height:60%;overflow-y:auto;
+  display:none;
+  box-shadow:0 -4px 20px rgba(0,0,0,.4);
+}
+.sp.open{display:block;}
+.sp-hdr{
+  padding:.3rem .7rem;font-size:9px;font-weight:700;
+  color:var(--accent);text-transform:uppercase;letter-spacing:.7px;
+  border-bottom:1px solid var(--sp-bd);
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;background:var(--sp-bg);z-index:1;
+}
+.sp-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0 2px;}
+.sp-close:hover{color:var(--text);}
+
+.sp-item{
+  padding:.42rem .7rem;cursor:pointer;
+  border-bottom:1px solid var(--sp-bd);
+  display:flex;flex-direction:column;gap:3px;
+  transition:background .1s;
+}
+.sp-item:last-child{border-bottom:none;}
+.sp-item:hover,.sp-item.chosen{background:var(--sp-hov);}
+.sp-item.chosen{border-left:2px solid var(--accent);padding-left:calc(.7rem - 2px);}
+
+.sp-section{font-size:8.5px;color:var(--sp-txt);text-transform:uppercase;letter-spacing:.5px;}
+.sp-op{font-size:10px;color:var(--text);font-weight:600;}
+.sp-preview{font-family:'JetBrains Mono',monospace;font-size:11px;white-space:pre;overflow:hidden;text-overflow:ellipsis;}
+.col-oct .sp-preview{color:var(--oct-c);}
+.col-py  .sp-preview{color:var(--py-c);}
+.col-jl  .sp-preview{color:var(--jl-c);}
+.col-jlp .sp-preview{color:var(--jlp-c);}
+
+/* STATUS */
+.sbar{padding:.25rem 1rem;border-top:1px solid var(--border);background:var(--bg2);font-size:10px;color:var(--muted);flex-shrink:0;display:flex;gap:1.5rem;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <span class="brand">⇄ Live Code Translator</span>
+    <span class="tagline">Octave · Python · Julia · Julia+PyPlot — type in any column</span>
+  </div>
+  <div class="hdr-r">
+    <span id="mc">0 matched</span>
+    <button class="tbtn" onclick="toggleTheme()" id="themeBtn">☀ Light</button>
+  </div>
+</div>
+<div class="hint">
+  <span id="hintL">Start typing — suggestions appear after 1 character</span>
+  <span id="hintR" style="color:var(--accent);font-size:9.5px;"></span>
+</div>
+
+<div class="grid">
+  <div class="col col-oct">
+    <div class="col-hdr">
+      <span class="lb">🐙 Octave / MATLAB</span>
+      <button class="cbtn" onclick="clearAll()">clear all</button>
+    </div>
+    <div class="col-body">
+      <textarea id="ta-oct" spellcheck="false"
+        placeholder="zeros(3,4)&#10;sortrows(a,3)&#10;find(a(:,1)>2)&#10;plot(x,y)&#10;load('f.mat')&#10;iop"></textarea>
+    </div>
+    <div class="sp" id="sp-oct">
+      <div class="sp-hdr"><span>Did you mean?</span><button class="sp-close" onclick="closeSP('oct')">✕</button></div>
+      <div id="sp-oct-list"></div>
+    </div>
+  </div>
+
+  <div class="col col-py">
+    <div class="col-hdr"><span class="lb">🐍 Python / NumPy</span></div>
+    <div class="col-body">
+      <textarea id="ta-py" spellcheck="false" readonly
+        placeholder="np.zeros((3,4))&#10;a[a[:,2].argsort()]&#10;id = a[:,0] > 2"></textarea>
+    </div>
+    <div class="sp" id="sp-py">
+      <div class="sp-hdr"><span>Did you mean?</span><button class="sp-close" onclick="closeSP('py')">✕</button></div>
+      <div id="sp-py-list"></div>
+    </div>
+  </div>
+
+  <div class="col col-jl">
+    <div class="col-hdr"><span class="lb">🔷 Julia / Plots.jl</span></div>
+    <div class="col-body">
+      <textarea id="ta-jl" spellcheck="false" readonly
+        placeholder="zeros(3,4)&#10;a[sortperm(a[:,3]),:]&#10;id = a[:,1] .> 2"></textarea>
+    </div>
+    <div class="sp" id="sp-jl">
+      <div class="sp-hdr"><span>Did you mean?</span><button class="sp-close" onclick="closeSP('jl')">✕</button></div>
+      <div id="sp-jl-list"></div>
+    </div>
+  </div>
+
+  <div class="col col-jlp">
+    <div class="col-hdr"><span class="lb">📊 Julia + PyPlot</span></div>
+    <div class="col-body">
+      <textarea id="ta-jlp" spellcheck="false" readonly
+        placeholder="PyPlot.figure(1)&#10;PyPlot.plot(x,y)&#10;PyPlot.savefig(&quot;f.png&quot;,dpi=300)"></textarea>
+    </div>
+    <div class="sp" id="sp-jlp">
+      <div class="sp-hdr"><span>Did you mean?</span><button class="sp-close" onclick="closeSP('jlp')">✕</button></div>
+      <div id="sp-jlp-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="sbar">
+  <span id="st1">Waiting...</span>
+  <span id="st2"></span>
+</div>
+
+<script>
+// ============================================================
+// DATABASE — exact data from cheatsheet
+// tags: extra search keywords for special entries
+// ============================================================
+const DB = [
+  // Vector & Matrix
+  {s:"Vector & Matrix",op:"Row vector",tags:"array list",
+   oct:"v = [1 2 3]",py:"v = np.array([1,2,3])",jl:"v = [1 2 3]",jlp:""},
+  {s:"Vector & Matrix",op:"Column vector",tags:"array column",
+   oct:"v = [1;2;3]",py:"v = np.array([[1],[2],[3]])",jl:"v = [1,2,3]",jlp:""},
+  {s:"Vector & Matrix",op:"Range / arange",tags:"range arange step sequence",
+   oct:"1:0.5:10",py:"np.arange(1,10,0.5)",jl:"1:0.5:10",jlp:""},
+  {s:"Vector & Matrix",op:"Linspace",tags:"linspace linear space evenly spaced",
+   oct:"linspace(0,1,100)",py:"np.linspace(0,1,100)",jl:"range(0,1,100)",jlp:""},
+  {s:"Vector & Matrix",op:"Matrix literal",tags:"matrix array 2d",
+   oct:"A = [1 2;3 4]",py:"A = np.array([[1,2],[3,4]])",jl:"A = [1 2;3 4]",jlp:""},
+  {s:"Vector & Matrix",op:"Zeros",tags:"zeros empty null matrix",
+   oct:"zeros(3,4)",py:"np.zeros((3,4))",jl:"zeros(3,4)",jlp:""},
+  {s:"Vector & Matrix",op:"Ones",tags:"ones fill matrix",
+   oct:"ones(3,4)",py:"np.ones((3,4))",jl:"ones(3,4)",jlp:""},
+  {s:"Vector & Matrix",op:"Identity matrix",tags:"eye identity diagonal",
+   oct:"eye(3)",py:"np.eye(3)",jl:"using LinearAlgebra\nI(3)",jlp:""},
+  {s:"Vector & Matrix",op:"Random uniform [0,1)",tags:"rand random uniform",
+   oct:"rand(3,4)",py:"np.random.rand(3,4)",jl:"rand(3,4)",jlp:""},
+  {s:"Vector & Matrix",op:"Random normal (Gaussian)",tags:"randn random normal gaussian",
+   oct:"randn(3,4)",py:"np.random.randn(3,4)",jl:"randn(3,4)",jlp:""},
+
+  // Size & Length
+  {s:"Size & Length",op:"Full size / shape",tags:"size shape dimensions",
+   oct:"s = size(A)",py:"s = A.shape",jl:"s = size(A)",jlp:""},
+  {s:"Size & Length",op:"Number of rows",tags:"size rows nrow",
+   oct:"s = size(A, 1)",py:"s = A.shape[0]",jl:"s = size(A, 1)",jlp:""},
+  {s:"Size & Length",op:"Number of cols",tags:"size cols ncol",
+   oct:"s = size(A, 2)",py:"s = A.shape[1]",jl:"s = size(A, 2)",jlp:""},
+  {s:"Size & Length",op:"Vector length",tags:"length len vector",
+   oct:"n = length(v)",py:"n = len(v)",jl:"n = length(v)",jlp:""},
+  {s:"Size & Length",op:"Total elements (numel)",tags:"numel size total count",
+   oct:"n = numel(A)",py:"n = A.size",jl:"n = prod(size(A))",jlp:""},
+  {s:"Size & Length",op:"Number of dimensions (ndims)",tags:"ndims ndim dimensions",
+   oct:"ndims(A)",py:"A.ndim",jl:"ndims(A)",jlp:""},
+
+  // Filename
+  {s:"Filename",op:"Build filename from variables",tags:"filename string num2str sprintf format variable",
+   oct:"fname = ['TBLG_n', num2str(n), 'm', num2str(m), '.mat'];",
+   py:"fname = f\"TBLG_n{n}m{m}.mat\"",
+   jl:"fname = \"TBLG_n$(n)m$(m).mat\"",jlp:""},
+  {s:"Filename",op:"Zero-padded number in filename",tags:"sprintf pad zero format filename",
+   oct:"fname = sprintf('file_%03d.mat', i);",
+   py:"fname = f\"file_{i:03d}.mat\"",
+   jl:"fname = \"file_$(lpad(string(i),3,'0')).mat\"",jlp:""},
+  {s:"Filename",op:"Current script folder",tags:"mfilename fileparts dirname abspath dir folder script",
+   oct:"fileparts(mfilename('fullpath'))",
+   py:"os.path.dirname(os.path.abspath(__file__))",
+   jl:"@__DIR__  # folder of current script",jlp:""},
+  {s:"Filename",op:"Full path join",tags:"fullfile joinpath join path",
+   oct:"fpath = fullfile(dir, fname);",
+   py:"fpath = os.path.join(dir, fname)",
+   jl:"fpath = joinpath(@__DIR__, fname)",jlp:""},
+  {s:"Filename",op:"cd inside code",tags:"cd chdir change directory",
+   oct:"cd('C:/path/to/dir')",
+   py:"os.chdir('C:/path/to/dir')",
+   jl:"cd(\"C:/path/to/dir\")",jlp:""},
+  {s:"Filename",op:"Relative cd navigation",tags:"cd chdir relative navigation up",
+   oct:"cd('codes')\ncd('..')\ncd('outputs')",
+   py:"os.chdir('codes')\nos.chdir('..')\nos.chdir('outputs')",
+   jl:"cd(\"codes\")\ncd(\"..\")\ncd(\"outputs\")",jlp:""},
+
+  // Concatenation
+  {s:"Concatenation",op:"vcat — stack rows vertically",tags:"vcat vstack concatenate rows vertical",
+   oct:"[A; B]",py:"np.vstack([A,B])",jl:"vcat(A,B)",jlp:""},
+  {s:"Concatenation",op:"hcat — stack cols horizontally",tags:"hcat hstack concatenate cols horizontal",
+   oct:"[A B]",py:"np.hstack([A,B])",jl:"hcat(A,B)",jlp:""},
+  {s:"Concatenation",op:"Append element in loop",tags:"append push grow accumulate loop",
+   oct:"E = [E, val]",py:"E.append(val)",jl:"push!(E, val)",jlp:""},
+  {s:"Concatenation",op:"Init empty array",tags:"empty init array list",
+   oct:"E = []",py:"E = []",jl:"E = Float64[]",jlp:""},
+
+  // Indexing & Filtering
+  {s:"Indexing & Filtering",op:"Element [i,j]",tags:"index element access ij",
+   oct:"A(i,j)",py:"A[i-1,j-1]",jl:"A[i,j]",jlp:""},
+  {s:"Indexing & Filtering",op:"Entire row i",tags:"row index slice",
+   oct:"A(i,:)",py:"A[i-1,:]",jl:"A[i,:]",jlp:""},
+  {s:"Indexing & Filtering",op:"Entire col j",tags:"column index slice",
+   oct:"A(:,j)",py:"A[:,j-1]",jl:"A[:,j]",jlp:""},
+  {s:"Indexing & Filtering",op:"Filter rows by condition (find)",tags:"find filter condition logical index boolean nonzero",
+   oct:"id = find(a(:,1)>2);\nd = a(id,:);",
+   py:"id = a[:,0] > 2\nd = a[id,:]",
+   jl:"id = a[:,1] .> 2\nd = a[id,:]",jlp:""},
+  {s:"Indexing & Filtering",op:"Sort rows by column 3 (sortrows)",tags:"sortrows sort column argsort sortperm",
+   oct:"a = sortrows(a,3);",
+   py:"a = a[a[:,2].argsort()]",
+   jl:"a = a[sortperm(a[:,3]),:]",jlp:""},
+  {s:"Indexing & Filtering",op:"Sort rows by col 1 (sortrows default)",tags:"sortrows sort rows default",
+   oct:"a = sortrows(a);",
+   py:"a = a[a[:,0].argsort()]",
+   jl:"a = sortslices(a, dims=1)",jlp:""},
+  {s:"Indexing & Filtering",op:"Sort cols by row 1",tags:"sortrows sort cols transpose",
+   oct:"a = sortrows(a')';",
+   py:"a = a[:,a[0,:].argsort()]",
+   jl:"a = sortslices(a, dims=2)",jlp:""},
+
+  // Matrix operations
+  {s:"Matrix ops",op:"Matrix multiply",tags:"multiply matmul dot product matrix",
+   oct:"A * B",py:"A @ B",jl:"A * B",jlp:""},
+  {s:"Matrix ops",op:"Element-wise multiply",tags:"element wise multiply dot star",
+   oct:"A .* B",py:"A * B",jl:"A .* B",jlp:""},
+  {s:"Matrix ops",op:"Element-wise power / square",tags:"power square element wise",
+   oct:"A .^ 2",py:"A ** 2",jl:"A .^ 2",jlp:""},
+  {s:"Matrix ops",op:"Transpose",tags:"transpose T prime",
+   oct:"A'",py:"A.T",jl:"A'",jlp:""},
+  {s:"Matrix ops",op:"Eigenvalues & eigenvectors (eig — all)",tags:"eig eigen eigenvalue eigenvector decomposition",
+   oct:"[V,D] = eig(A)",
+   py:"D,V = np.linalg.eig(A)",
+   jl:"using LinearAlgebra\nD,V = eigen(A)",jlp:""},
+  {s:"Matrix ops",op:"Partial eigendecomposition k largest (eigs)",tags:"eigs partial sparse eigen largest",
+   oct:"[V,D] = eigs(A, k)",
+   py:"D,V = scipy.sparse.linalg.eigs(A, k=6)",
+   jl:"using Arpack\nD,V = eigs(A, nev=6)",jlp:""},
+  {s:"Matrix ops",op:"Partial eigendecomposition k smallest",tags:"eigs partial sparse eigen smallest",
+   oct:"[V,D] = eigs(A, k, 'smallestabs')",
+   py:"D,V = scipy.sparse.linalg.eigs(A, k=6, which='SM')",
+   jl:"D,V = eigs(A, nev=6, which=:SM)\n# :LM=largest, :SM=smallest",jlp:""},
+  {s:"Matrix ops",op:"Determinant (det)",tags:"det determinant",
+   oct:"det(A)",py:"np.linalg.det(A)",jl:"det(A)",jlp:""},
+  {s:"Matrix ops",op:"Trace (tr)",tags:"trace tr diagonal sum",
+   oct:"trace(A)",py:"np.trace(A)",jl:"tr(A)",jlp:""},
+  {s:"Matrix ops",op:"Solve linear system Ax = b",tags:"solve linear system backslash mldivide linalg",
+   oct:"x = A \\ b",py:"x = np.linalg.solve(A,b)",jl:"x = A \\ b",jlp:""},
+
+  // Accumulate in loop
+  {s:"Loop / Accumulate",op:"Accumulate array horizontally in loop",tags:"accumulate loop append horizontal grow push",
+   oct:"E1 = [];\nfor i = 1:10\n  E1 = [E1, i^2];\nend",
+   py:"E1 = []\nfor i in range(1,11):\n  E1.append(i**2)\nE1 = np.array(E1)",
+   jl:"E1 = Float64[]\nfor i in 1:10\n  push!(E1, i^2)\nend",jlp:""},
+  {s:"Loop / Accumulate",op:"Accumulate array vertically in loop",tags:"accumulate loop append vertical grow push",
+   oct:"E2 = [];\nfor i = 1:10\n  E2 = [E2; i^2];\nend",
+   py:"E2 = []\nfor i in range(1,11):\n  E2.append([i**2])\nE2 = np.array(E2)",
+   jl:"E2 = Float64[]\nfor i in 1:10\n  push!(E2, i^2)\nend",jlp:""},
+
+  // Functions
+  {s:"Functions",op:"Define function",tags:"function def define return",
+   oct:"function y = sq(x)\n  y = x .^ 2;\nend",
+   py:"def sq(x):\n  return x ** 2",
+   jl:"function sq(x)\n  return x .^ 2\nend",jlp:""},
+  {s:"Functions",op:"One-liner / lambda function",tags:"lambda anonymous oneliner arrow",
+   oct:"% not supported",
+   py:"sq = lambda x: x**2",
+   jl:"sq(x) = x .^ 2",jlp:""},
+  {s:"Functions",op:"Multiple return values",tags:"function return multiple tuple",
+   oct:"function [a,b] = f(x)\n  a = x + 1;\n  b = x - 1;\nend\n[a, b] = f(x)",
+   py:"def f(x):\n  return x+1, x-1\n\na, b = f(x)",
+   jl:"function f(x)\n  return x+1, x-1\nend\n\na, b = f(x)",jlp:""},
+  {s:"Functions",op:"Default arguments",tags:"function default argument nargin optional",
+   oct:"function y = f(x, n)\n  if nargin < 2; n=2; end\n  y = x .^ n;\nend",
+   py:"def f(x, n=2):\n  return x ** n",
+   jl:"function f(x, n=2)\n  return x .^ n\nend",jlp:""},
+  {s:"Functions",op:"Anonymous / lambda function",tags:"anonymous lambda arrow function handle",
+   oct:"f = @(x) x.^2 + 1",
+   py:"f = lambda x: x**2 + 1",
+   jl:"f = x -> x.^2 + 1",jlp:""},
+  {s:"Functions",op:"Apply function to array (broadcast / vectorize)",tags:"arrayfun vectorize broadcast apply map",
+   oct:"y = arrayfun(@sq, v)",
+   py:"y = np.vectorize(sq)(v)",
+   jl:"y = sq.(v)  # dot . = broadcast",jlp:""},
+
+  // For loops
+  {s:"For loops",op:"Basic for loop",tags:"for loop range iterate basic",
+   oct:"for i = 1:10\n  disp(i)\nend",
+   py:"for i in range(1,11):\n  print(i)",
+   jl:"for i in 1:10\n  println(i)\nend",jlp:""},
+  {s:"For loops",op:"Loop over rows of matrix",tags:"for loop rows matrix iterate",
+   oct:"for i = 1:size(a,1)\n  row = a(i,:);\nend",
+   py:"for i in range(len(a)):\n  row = a[i,:]",
+   jl:"for i in 1:size(a,1)\n  row = a[i,:]\nend",jlp:""},
+  {s:"For loops",op:"Loop with step size",tags:"for loop step range stride",
+   oct:"for i = 1:2:10\nend",
+   py:"for i in range(1,11,2):\n  pass",
+   jl:"for i in 1:2:10\nend",jlp:""},
+  {s:"For loops",op:"Loop over vector elements",tags:"for loop vector elements iterate",
+   oct:"for x = v\n  disp(x)\nend",
+   py:"for x in v:\n  print(x)",
+   jl:"for x in v\n  println(x)\nend",jlp:""},
+  {s:"For loops",op:"Loop with index and value (enumerate)",tags:"for enumerate index value pair",
+   oct:"for i = 1:length(v)\n  x = v(i);\nend",
+   py:"for i, x in enumerate(v):\n  print(i, x)",
+   jl:"for (i, x) in enumerate(v)\n  println(i, \" \", x)\nend",jlp:""},
+  {s:"For loops",op:"Nested loops",tags:"for loop nested ij matrix",
+   oct:"for i = 1:m\n  for j = 1:n\n    a(i,j) = i+j;\n  end\nend",
+   py:"for i in range(m):\n  for j in range(n):\n    a[i,j] = i+j",
+   jl:"for i in 1:m, j in 1:n\n  a[i,j] = i+j\nend",jlp:""},
+  {s:"For loops",op:"While loop",tags:"while loop condition",
+   oct:"while x > 0\n  x = x - 1;\nend",
+   py:"while x > 0:\n  x = x - 1",
+   jl:"while x > 0\n  x = x - 1\nend",jlp:""},
+  {s:"For loops",op:"Break and Continue",tags:"break continue loop exit skip",
+   oct:"for i = 1:10\n  if i==5; break; end\n  if i==3; continue; end\nend",
+   py:"for i in range(1,11):\n  if i==5: break\n  if i==3: continue",
+   jl:"for i in 1:10\n  i==5 && break\n  i==3 && continue\nend",jlp:""},
+
+  // Basic Plots
+  {s:"Basic plots",op:"Line plot",tags:"plot line xy",
+   oct:"plot(x, y)",py:"plt.plot(x, y)",jl:"plot(x, y)",jlp:"PyPlot.plot(x, y)"},
+  {s:"Basic plots",op:"Dot / marker plot",tags:"plot marker dot circle symbol ro",
+   oct:"plot(x, y, 'ro')",py:"plt.plot(x, y, 'ro')",
+   jl:"scatter(x, y, color=:red, marker=:circle)",jlp:"PyPlot.plot(x, y, \"ro\")"},
+  {s:"Basic plots",op:"Scatter plot (colored by value)",tags:"scatter color zcolor filled cmap",
+   oct:"scatter(x,y,20,c,'filled')",py:"plt.scatter(x,y,s=20,c=c)",
+   jl:"scatter(x, y, zcolor=c, markersize=4)",jlp:"PyPlot.scatter(x,y,s=20,c=c)"},
+  {s:"Basic plots",op:"Hold on — overlay multiple plots",tags:"hold on overlay multiple plot bang",
+   oct:"hold on",py:"# automatic in matplotlib",
+   jl:"plot!(...)",jlp:"# automatic in PyPlot"},
+  {s:"Basic plots",op:"Axis equal",tags:"axis equal aspect ratio square",
+   oct:"axis equal",py:"plt.axis('equal')",
+   jl:"plot(aspect_ratio=:equal)",jlp:"PyPlot.axis(\"equal\")"},
+  {s:"Basic plots",op:"Log y-axis (semilogy)",tags:"semilogy log y axis logarithmic",
+   oct:"semilogy(x, y)",py:"plt.semilogy(x, y)",
+   jl:"plot(x, y, yscale=:log10)",jlp:"PyPlot.semilogy(x, y)"},
+  {s:"Basic plots",op:"Labels and title",tags:"xlabel ylabel title label axis",
+   oct:"xlabel('x')\nylabel('y')\ntitle('t')",
+   py:"plt.xlabel('x')\nplt.ylabel('y')\nplt.title('t')",
+   jl:"plot(xlabel=\"x\", ylabel=\"y\", title=\"t\")",
+   jlp:"PyPlot.xlabel(\"x\")\nPyPlot.ylabel(\"y\")\nPyPlot.title(\"t\")"},
+  {s:"Basic plots",op:"Save figure (saveas / savefig)",tags:"save saveas savefig png pdf figure export",
+   oct:"saveas(gcf,'f.png')",py:"plt.savefig('f.png', dpi=300)",
+   jl:"savefig(fig, \"f.png\")",jlp:"PyPlot.savefig(\"f.png\", dpi=300)"},
+  {s:"Basic plots",op:"Colorbar",tags:"colorbar color scale",
+   oct:"colorbar",py:"plt.colorbar()",
+   jl:"scatter!(x, y, zcolor=c, colorbar=true)",jlp:"PyPlot.colorbar()"},
+  {s:"Basic plots",op:"Colorbar with label",tags:"colorbar label text string",
+   oct:"cb = colorbar;\ncb.Label.String='value';",
+   py:"cb = plt.colorbar()\ncb.set_label('value')",
+   jl:"scatter!(x, y, zcolor=c, colorbar=true, colorbar_title=\"value\")",
+   jlp:"cb = PyPlot.colorbar()\ncb.set_label(\"value\")"},
+  {s:"Basic plots",op:"Colormap (jet / hot / viridis)",tags:"colormap cmap jet hot viridis plasma gray color",
+   oct:"colormap(jet)\ncolormap(hot)",py:"plt.set_cmap('jet')",
+   jl:"scatter!(x, y, zcolor=c, color=:jet)",
+   jlp:"PyPlot.set_cmap(\"jet\")  # \"viridis\" \"plasma\" \"hot\""},
+  {s:"Basic plots",op:"Colorbar limits (caxis / clim)",tags:"caxis clim colorbar limit range",
+   oct:"caxis([0 1])",py:"plt.clim(0, 1)",
+   jl:"scatter!(x, y, zcolor=c, clims=(0,1))",jlp:"PyPlot.clim(0, 1)"},
+  {s:"Basic plots",op:"Legend",tags:"legend label text series",
+   oct:"legend('c1','c2')",py:"plt.legend()",
+   jl:"plot(x, y, label=\"c1\")\nplot!(x, y2, label=\"c2\")",
+   jlp:"PyPlot.plot(x,y,label=\"c1\")\nPyPlot.legend()"},
+  {s:"Basic plots",op:"Grid on",tags:"grid on gridlines",
+   oct:"grid on",py:"plt.grid(True)",jl:"plot(x, y, grid=true)",jlp:"PyPlot.grid(true)"},
+  {s:"Basic plots",op:"X and Y limits (xlim / ylim)",tags:"xlim ylim xlims ylims axis limits range",
+   oct:"xlim([0 10])\nylim([0 100])",
+   py:"plt.xlim(0, 10)\nplt.ylim(0, 100)",
+   jl:"plot(x, y, xlims=(0,10), ylims=(0,100))",
+   jlp:"PyPlot.xlim(0, 10)\nPyPlot.ylim(0, 100)"},
+  {s:"Basic plots",op:"Font size",tags:"font size fontsize text gca rcParams",
+   oct:"set(gca,'FontSize',14)",py:"plt.rcParams['font.size'] = 14",
+   jl:"plot(x, y, guidefont=font(14), tickfont=font(12))",
+   jlp:"PyPlot.rc(\"font\", size=14)"},
+  {s:"Basic plots",op:"Set xticks (5 values from linspace)",tags:"xticks ticks xaxis values linspace",
+   oct:"set(gca,'XTick', linspace(0,10,5))",
+   py:"ticks=np.linspace(0,10,5)\nplt.xticks(ticks)",
+   jl:"plot(x, y, xticks=range(0,10,5))",jlp:"PyPlot.xticks(range(0,10,5))"},
+  {s:"Basic plots",op:"Tick labels (text)",tags:"ticklabels xtick ytick text labels",
+   oct:"set(gca,'XTick',[1 2 3],'XTickLabel',{'a','b','c'})",
+   py:"plt.xticks([1,2,3],['a','b','c'])",
+   jl:"plot(x, y, xticks=[1,2,3], xticklabels=[\"a\",\"b\",\"c\"])",
+   jlp:"PyPlot.xticks([1,2,3],[\"a\",\"b\",\"c\"])"},
+  {s:"Basic plots",op:"Turn off ticks",tags:"ticks off none hide remove",
+   oct:"set(gca,'XTick',[])\nset(gca,'YTick',[])",
+   py:"plt.xticks([])\nplt.yticks([])",
+   jl:"plot(x, y, xticks=:none, yticks=:none)",
+   jlp:"PyPlot.xticks([])\nPyPlot.yticks([])"},
+  {s:"Basic plots",op:"Colorbar ticks (5 values)",tags:"colorbar ticks cb linspace values",
+   oct:"cb = colorbar;\ncb.Ticks=linspace(0,1,5);",
+   py:"cb = plt.colorbar()\ncb.set_ticks(np.linspace(0,1,5))",
+   jl:"scatter!(x, y, zcolor=c, colorbar=true, colorbar_ticks=range(0,1,5))",
+   jlp:"cb = PyPlot.colorbar()\ncb.set_ticks(np.linspace(0,1,5))"},
+  {s:"Basic plots",op:"Turn off colorbar ticks",tags:"colorbar ticks off none hide",
+   oct:"cb = colorbar;\ncb.Ticks = [];",
+   py:"cb = plt.colorbar()\ncb.set_ticks([])",
+   jl:"scatter!(x, y, zcolor=c, colorbar=false)",
+   jlp:"cb = PyPlot.colorbar()\ncb.set_ticks([])"},
+
+  // Figure management
+  {s:"Figure management",op:"Create named figure (figure n)",tags:"figure create new window n number",
+   oct:"figure(1)",py:"plt.figure(1)",
+   jl:"figs = Dict{Int,Any}()\nfigs[1] = plot(title=\"Figure 1\")",jlp:"PyPlot.figure(1)"},
+  {s:"Figure management",op:"Draw into figure n",tags:"figure draw plot into active select",
+   oct:"figure(1)\nplot(x, y)",py:"plt.figure(1)\nplt.plot(x, y)",
+   jl:"plot!(figs[1], x, y, label=\"x²\")\ndisplay(figs[1])",
+   jlp:"PyPlot.figure(1)\nPyPlot.plot(x, y)"},
+  {s:"Figure management",op:"Add to existing figure (hold on)",tags:"hold on figure add overlay multiple",
+   oct:"figure(1)\nhold on\nplot(x, y2)",
+   py:"plt.figure(1)\nplt.plot(x, y2)",
+   jl:"plot!(figs[1], x, y2, label=\"y2\")",
+   jlp:"PyPlot.figure(1)\nPyPlot.plot(x, y2)"},
+  {s:"Figure management",op:"Close all figures",tags:"close all figures windows",
+   oct:"close all",py:"plt.close('all')",jl:"# not needed",jlp:"PyPlot.close(\"all\")"},
+
+  // Publication format
+  {s:"Publication format (IOP)",op:"IOP figure width — single and double column",tags:"iop publication figure width journal single double column inch cm",
+   oct:"w_single = 8.5/2.54;  % inches\nw_double = 15/2.54;",
+   py:"w_single = 8.5 / 2.54  # inches\nw_double = 15 / 2.54",
+   jl:"w_single = 8.5 / 2.54  # inches\nw_double = 15 / 2.54",
+   jlp:"w_single = 8.5 / 2.54\nw_double = 15 / 2.54"},
+  {s:"Publication format (IOP)",op:"Set all rcParams — IOP journal style",tags:"iop rcparams publication style journal font linewidth dpi rcParams default",
+   oct:"set(0,'DefaultAxesFontSize',10)\nset(0,'DefaultLineLineWidth',1.2)\nset(0,'DefaultAxesLineWidth',0.8)",
+   py:"plt.rcParams.update({\n  \"font.size\": 10,\n  \"axes.labelsize\": 10,\n  \"legend.fontsize\": 8,\n  \"xtick.labelsize\": 9,\n  \"ytick.labelsize\": 9,\n  \"axes.linewidth\": 0.8,\n  \"lines.linewidth\": 1.2,\n  \"lines.markersize\": 4,\n  \"xtick.direction\": \"in\",\n  \"ytick.direction\": \"in\",\n  \"xtick.major.size\": 3,\n  \"ytick.major.size\": 3,\n  \"figure.dpi\": 300,\n  \"savefig.dpi\": 300,\n})",
+   jl:"default(\n  fontsize=10,\n  guidefontsize=10,\n  legendfontsize=8,\n  tickfontsize=9,\n  linewidth=1.2,\n  markersize=4,\n  framestyle=:box,\n  tick_direction=:in,\n  dpi=300)",
+   jlp:"PyPlot.rcParams.update(Dict(\n  \"font.size\" => 10,\n  \"axes.labelsize\" => 10,\n  \"legend.fontsize\" => 8,\n  \"lines.linewidth\" => 1.2,\n  \"xtick.direction\" => \"in\",\n  \"ytick.direction\" => \"in\",\n  \"figure.dpi\" => 300,\n  \"savefig.dpi\" => 300,\n))"},
+  {s:"Publication format (IOP)",op:"Create figure with aspect ratio",tags:"figure aspect ratio size width height subplots nrows ncols",
+   oct:"nrows=1; ncols=2;\nw = 15/2.54;\naspect = 0.85*(nrows/ncols);\nfigure('Units','inches','Position',[0 0 w w*aspect])",
+   py:"nrows, ncols = 1, 2\nw = 15 / 2.54\naspect = 0.85 * (nrows/ncols)\nfig, axs = plt.subplots(nrows, ncols, figsize=(w, w*aspect))",
+   jl:"nrows, ncols = 1, 2\nw = 15 / 2.54\naspect = 0.85*(nrows/ncols)\nfig = plot(layout=(nrows,ncols),\n  size=(w*96, w*aspect*96))\n# 96 px/inch approx",
+   jlp:"nrows, ncols = 1, 2\nw = 15 / 2.54\naspect = 0.85*(nrows/ncols)\nfig, axs = PyPlot.subplots(nrows, ncols, figsize=(w, w*aspect))"},
+  {s:"Publication format (IOP)",op:"Ticks inward, both sides (box frame)",tags:"ticks inward box frame tickdir tick direction both sides",
+   oct:"set(gca,'TickDir','in','Box','on')",
+   py:"ax.tick_params(direction='in',top=True,right=True)",
+   jl:"plot(x, y, tick_direction=:in, framestyle=:box)",
+   jlp:"ax = PyPlot.gca()\nax.tick_params(direction=\"in\",top=true,right=true)"},
+  {s:"Publication format (IOP)",op:"Tight layout and save PDF + PNG",tags:"tight layout save savefig bbox pdf png dpi export",
+   oct:"saveas(gcf,'fig.pdf')",
+   py:"plt.tight_layout()\nplt.savefig(\"fig.pdf\", bbox_inches=\"tight\", dpi=300)",
+   jl:"savefig(fig, \"fig.pdf\", dpi=300)",
+   jlp:"PyPlot.tight_layout()\nPyPlot.savefig(\"fig.pdf\", bbox_inches=\"tight\", dpi=300)"},
+
+  // File I/O
+  {s:"File I/O",op:"Write .mat file (save / savemat)",tags:"save savemat mat write matwrite scipy",
+   oct:"save('f.mat','A','B')",
+   py:"import scipy.io\nscipy.io.savemat('f.mat', {'A':A,'B':B})",
+   jl:"using MAT\nmatwrite(\"f.mat\", Dict(\"A\"=>A,\"B\"=>B))",jlp:""},
+  {s:"File I/O",op:"Read .mat file (load / loadmat)",tags:"load loadmat mat read matread scipy",
+   oct:"load('f.mat')",
+   py:"d = scipy.io.loadmat('f.mat')\nA = d['A']",
+   jl:"d = matread(\"f.mat\")\nA = d[\"A\"]",jlp:""},
+  {s:"File I/O",op:"Read .mat with v7.3 fallback (load_mat robust)",tags:"load mat v7 v73 hdf5 fallback robust load_mat loadmat",
+   oct:"% works for all versions\nload('f.mat')",
+   py:"import scipy.io, subprocess\n\ndef load_mat(f):\n  try:\n    return scipy.io.loadmat(f)\n  except:\n    f7 = f.replace('.mat','_v7.mat')\n    subprocess.run(['octave','--no-gui','--eval',\n      f\"load('{f}');save('-v7','{f7}');\"])\n    return scipy.io.loadmat(f7)",
+   jl:"# MAT.jl reads all versions including v7.3 (HDF5)\nusing MAT\nd = matread(\"f.mat\")",jlp:""},
+  {s:"File I/O",op:"Write .txt delimited (dlmwrite)",tags:"dlmwrite savetxt txt write text delimited",
+   oct:"dlmwrite('f.txt', A)",py:"np.savetxt('f.txt', A)",jl:"writedlm(\"f.txt\", A, ',')",jlp:""},
+  {s:"File I/O",op:"Read .txt delimited (dlmread)",tags:"dlmread loadtxt txt read text delimited",
+   oct:"dlmread('f.txt')",py:"np.loadtxt('f.txt')",jl:"readdlm(\"f.txt\", ',')",jlp:""},
+  {s:"File I/O",op:"Write .csv file",tags:"csvwrite csv write savetxt comma",
+   oct:"csvwrite('f.csv', A)",
+   py:"np.savetxt('f.csv', A, delimiter=',')",
+   jl:"using CSV, DataFrames\nCSV.write(\"f.csv\", DataFrame(A,:auto))",jlp:""},
+  {s:"File I/O",op:"Read .csv file",tags:"csvread csv read pandas read_csv dataframe",
+   oct:"csvread('f.csv')",
+   py:"import pandas as pd\ndf = pd.read_csv('f.csv')",
+   jl:"using CSV, DataFrames\ndf = CSV.read(\"f.csv\", DataFrame)",jlp:""},
+
+  // REPL
+  {s:"REPL & Shell",op:"Current working directory (pwd)",tags:"pwd directory current path cwd",
+   oct:"pwd",py:"%pwd",jl:"pwd()",jlp:""},
+  {s:"REPL & Shell",op:"List files (ls / dir / readdir)",tags:"ls dir readdir list files directory",
+   oct:"ls\ndir",py:"%ls",jl:"readdir()\nreaddir(pwd())",jlp:""},
+  {s:"REPL & Shell",op:"Change directory (cd / chdir)",tags:"cd chdir change directory navigate",
+   oct:"cd 'C:/path'",py:"%cd C:/path",jl:"cd(\"C:/path\")",jlp:""},
+  {s:"REPL & Shell",op:"Run script (run / include)",tags:"run include script execute source",
+   oct:"run('script.m')",py:"%run script.py",jl:"include(\"script.jl\")",jlp:""},
+  {s:"REPL & Shell",op:"List .mat files only",tags:"ls dir mat filter files list",
+   oct:"ls *.mat",py:"%ls *.mat",
+   jl:"filter(f->endswith(f,\".mat\"), readdir())",jlp:""},
+  {s:"REPL & Shell",op:"Check if file exists (exist / isfile)",tags:"exist isfile check file exists path",
+   oct:"exist('f','file')",py:"os.path.isfile('f')",jl:"isfile(\"f.mat\")",jlp:""},
+  {s:"REPL & Shell",op:"Home directory",tags:"home dir homedir cd tilde",
+   oct:"cd ~",py:"%cd ~",jl:"homedir()",jlp:""},
+  {s:"REPL & Shell",op:"Clear screen (clc)",tags:"clc clear screen terminal",
+   oct:"clc",py:"%clear",jl:"# Ctrl+L",jlp:""},
+  {s:"REPL & Shell",op:"Run shell command (system / run)",tags:"system shell command run bash terminal",
+   oct:"system('dir')",py:"!dir",jl:"run(`dir`)",jlp:""},
+  {s:"REPL & Shell",op:"Install package (pkg / pip / Pkg.add)",tags:"install package pkg pip add Pkg",
+   oct:"pkg install -forge pkg_name",py:"%pip install pkg",
+   jl:"using Pkg\nPkg.add(\"Pkg\")",jlp:""},
+];
+
+// ============================================================
+// SEARCH INDEX — prefix-aware
+// KWI: exact token → [row indices]
+// PREFIX: first 1/2/3 chars → [row indices]  (for instant suggestions)
+// ============================================================
+const KWI = {};
+const PREFIX = {};
+
+function tokenize(str) {
+  if (!str) return [];
+  const s = new Set();
+  for (const m of str.matchAll(/([a-zA-Z_]\w*)\s*[(!]/g)) s.add(m[1].toLowerCase());
+  for (const m of str.matchAll(/[a-zA-Z_]\w*/g)) s.add(m[0].toLowerCase());
+  return [...s];
+}
+
+function addKWI(tok, idx) {
+  tok = tok.toLowerCase().trim();
+  if (!tok || tok.length < 1) return;
+  if (!KWI[tok]) KWI[tok] = [];
+  if (!KWI[tok].includes(idx)) KWI[tok].push(idx);
+  // Also add prefixes of length 1..min(4,len)
+  for (let l = 1; l <= Math.min(4, tok.length); l++) {
+    const p = tok.slice(0, l);
+    if (!PREFIX[p]) PREFIX[p] = [];
+    if (!PREFIX[p].includes(idx)) PREFIX[p].push(idx);
+  }
+}
+
+DB.forEach((row, idx) => {
+  ['oct','py','jl','jlp'].forEach(lang => tokenize(row[lang]).forEach(t => addKWI(t, idx)));
+  row.op.toLowerCase().split(/\W+/).forEach(w => { if (w) addKWI(w, idx); });
+  row.s.toLowerCase().split(/\W+/).forEach(w => { if (w) addKWI(w, idx); });
+  (row.tags || '').toLowerCase().split(/\s+/).forEach(w => { if (w) addKWI(w, idx); });
+});
+
+// ============================================================
+// FIND CANDIDATES — works from 1 character
+// ============================================================
+function findCandidates(rawLine, srcLang) {
+  const raw = rawLine.trim();
+  if (!raw) return [];
+
+  const inputToks = tokenize(raw);
+  const rawN = raw.toLowerCase().replace(/\s+/g,'').replace(/[;,]/g,'');
+  const scores = {};
+
+  function bump(idx, pts) { scores[idx] = (scores[idx]||0) + pts; }
+
+  // 1. Exact token match
+  for (const tok of inputToks) {
+    (KWI[tok] || []).forEach(idx => {
+      bump(idx, 10);
+      const src = (DB[idx][srcLang]||'').toLowerCase();
+      if (src.includes(tok)) bump(idx, 12);
+      // Extra: function call match
+      if (new RegExp(`\\b${tok}\\s*[(!]`).test(src)) bump(idx, 20);
+    });
+  }
+
+  // 2. Prefix match (for partial typing, 1+ chars)
+  for (const tok of inputToks) {
+    for (let l = 1; l <= tok.length; l++) {
+      const p = tok.slice(0, l);
+      if (p.length < 1) continue;
+      (PREFIX[p] || []).forEach(idx => {
+        const weight = l <= 2 ? 2 : l <= 3 ? 4 : 6;
+        bump(idx, weight);
+        // Boost if prefix matches something in source language
+        const src = (DB[idx][srcLang]||'').toLowerCase();
+        if (src.includes(p)) bump(idx, 3);
+      });
+    }
+  }
+
+  // 3. Exact / substring full-line match
+  DB.forEach((row, idx) => {
+    const c = (row[srcLang]||'').toLowerCase().replace(/\s+/g,'').replace(/[;,]/g,'');
+    if (!c) return;
+    if (rawN === c)                                     bump(idx, 500);
+    else if (rawN.startsWith(c)||c.startsWith(rawN))   bump(idx, 80);
+    else if (rawN.includes(c)||c.includes(rawN))       bump(idx, 40);
+  });
+
+  return Object.entries(scores)
+    .filter(([,s]) => s >= 3)
+    .sort(([,a],[,b]) => b-a)
+    .map(([i]) => +i);
+}
+
+// ============================================================
+// UI STATE
+// ============================================================
+const LANGS  = ['oct','py','jl','jlp'];
+const LABELS = {oct:'Octave/MATLAB',py:'Python/NumPy',jl:'Julia/Plots.jl',jlp:'Julia+PyPlot'};
+let srcLang = 'oct';
+// choices[lineIdx] = DB index chosen for that line
+let lineChoices = {};
+// candidates per line (last computed)
+let lastCandidates = [];
+// which line is currently showing suggestions
+let activeSuggestLine = -1;
+
+LANGS.forEach(lang => {
+  const ta = document.getElementById('ta-' + lang);
+  ta.addEventListener('input',  () => doTranslate(lang));
+  ta.addEventListener('focus',  () => { if (srcLang !== lang) switchSource(lang); });
+  ta.addEventListener('keyup',  (e) => { if (srcLang === lang) onKeyUp(e, lang); });
+  ta.addEventListener('click',  () => { if (srcLang === lang) onCursorMove(lang); });
+});
+
+function switchSource(lang) {
+  srcLang = lang;
+  lineChoices = {};
+  lastCandidates = [];
+  activeSuggestLine = -1;
+  LANGS.forEach(l => {
+    const ta = document.getElementById('ta-' + l);
+    if (l === lang) { ta.removeAttribute('readonly'); ta.classList.remove('out'); }
+    else            { ta.setAttribute('readonly',''); ta.classList.add('out'); ta.value = ''; }
+    closeSP(l);
+  });
+}
+
+// Track cursor line to show suggestions for that line
+function onCursorMove(lang) {
+  const ta = document.getElementById('ta-' + lang);
+  const text = ta.value.substring(0, ta.selectionStart);
+  const lineIdx = text.split('\n').length - 1;
+  showSuggestForLine(lang, lineIdx);
+}
+
+function onKeyUp(e, lang) {
+  // On arrow up/down navigate suggestions; otherwise update cursor
+  const sp = document.getElementById('sp-' + lang);
+  if (sp.classList.contains('open')) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { navigateSP(lang, e.key); return; }
+    if (e.key === 'Enter' || e.key === 'Tab') { /* handled elsewhere */ return; }
+    if (e.key === 'Escape') { closeSP(lang); return; }
+  }
+  onCursorMove(lang);
+}
+
+// ============================================================
+// MAIN TRANSLATE
+// ============================================================
+function doTranslate(lang) {
+  srcLang = lang;
+  const srcTa = document.getElementById('ta-' + lang);
+  const lines = srcTa.value.split('\n');
+  let matched = 0;
+  const nonEmpty = lines.filter(l => l.trim()).length;
+
+  lastCandidates = lines.map(line => findCandidates(line, lang));
+
+  // Auto-pick best candidate (don't override existing choice)
+  lines.forEach((line, li) => {
+    if (!line.trim()) { delete lineChoices[li]; return; }
+    const cands = lastCandidates[li];
+    if (cands.length > 0) {
+      if (lineChoices[li] === undefined || !cands.includes(lineChoices[li]))
+        lineChoices[li] = cands[0];
+      matched++;
+    } else {
+      delete lineChoices[li];
+    }
+  });
+
+  renderOutputCols(lang, lines);
+  updateSPForCurrentLine(lang);
+
+  const mc = document.getElementById('mc');
+  mc.textContent = `${matched} / ${nonEmpty} matched`;
+  mc.className = matched > 0 ? 'on' : '';
+  document.getElementById('hintL').textContent =
+    `Source: ${LABELS[lang]} · ${matched}/${nonEmpty} lines recognized`;
+  document.getElementById('st1').textContent =
+    matched > 0 ? `✓ ${matched} line(s) translated` : '⚠ No matches — try: zeros, find, sortrows, iop, load_mat, rcparams...';
+  document.getElementById('st2').textContent = `${nonEmpty} lines`;
+}
+
+function renderOutputCols(lang, lines) {
+  LANGS.forEach(tgt => {
+    if (tgt === lang) return;
+    const ta = document.getElementById('ta-' + tgt);
+    ta.setAttribute('readonly','');
+    ta.classList.add('out');
+    ta.value = lines.map((line, li) => {
+      if (!line.trim()) return '';
+      const idx = lineChoices[li];
+      if (idx === undefined) return `# ?  no match`;
+      const val = DB[idx][tgt];
+      if (!val) return `# — N/A`;
+      return val;
+    }).join('\n');
+  });
+}
+
+// ============================================================
+// SUGGESTION PANEL
+// ============================================================
+function updateSPForCurrentLine(lang) {
+  const ta = document.getElementById('ta-' + lang);
+  const text = ta.value.substring(0, ta.selectionStart);
+  const lineIdx = text.split('\n').length - 1;
+  showSuggestForLine(lang, lineIdx);
+}
+
+function showSuggestForLine(lang, lineIdx) {
+  const lines = document.getElementById('ta-' + lang).value.split('\n');
+  const line = (lines[lineIdx] || '').trim();
+  const cands = lastCandidates[lineIdx] || findCandidates(line, lang);
+
+  if (!line || cands.length === 0) { closeSP(lang); return; }
+
+  activeSuggestLine = lineIdx;
+  const sp   = document.getElementById('sp-' + lang);
+  const list = document.getElementById('sp-' + lang + '-list');
+  sp.classList.add('open');
+  list.innerHTML = '';
+
+  cands.slice(0, 8).forEach((dbIdx) => {
+    const row = DB[dbIdx];
+    const item = document.createElement('div');
+    item.className = 'sp-item' + (lineChoices[lineIdx] === dbIdx ? ' chosen' : '');
+    item.dataset.idx = dbIdx;
+
+    const srcCode = (row[lang] || '—').split('\n')[0];
+    item.innerHTML = `
+      <div class="sp-section">${escHtml(row.s)}</div>
+      <div class="sp-op">${escHtml(row.op)}</div>
+      <div class="sp-preview">${escHtml(srcCode)}</div>
+    `;
+
+    item.addEventListener('mousedown', (e) => {
+      e.preventDefault(); // don't blur textarea
+      selectCandidate(lang, lineIdx, dbIdx);
+    });
+
+    list.appendChild(item);
+  });
+}
+
+function selectCandidate(lang, lineIdx, dbIdx) {
+  lineChoices[lineIdx] = dbIdx;
+
+  // *** KEY FIX: update the SOURCE column line too ***
+  const srcTa = document.getElementById('ta-' + lang);
+  const lines = srcTa.value.split('\n');
+  lines[lineIdx] = DB[dbIdx][lang] || lines[lineIdx];
+  srcTa.value = lines.join('\n');
+
+  // Update output cols
+  renderOutputCols(lang, lines);
+
+  // Refresh panel (mark chosen)
+  const list = document.getElementById('sp-' + lang + '-list');
+  list.querySelectorAll('.sp-item').forEach(el => {
+    el.classList.toggle('chosen', +el.dataset.idx === dbIdx);
+  });
+
+  // Update match counter
+  const nonEmpty = lines.filter(l => l.trim()).length;
+  const matched  = Object.keys(lineChoices).filter(k => lineChoices[k] !== undefined).length;
+  document.getElementById('mc').textContent = `${matched} / ${nonEmpty} matched`;
+  document.getElementById('mc').className = matched > 0 ? 'on' : '';
+}
+
+function navigateSP(lang, key) {
+  const list = document.getElementById('sp-' + lang + '-list');
+  const items = [...list.querySelectorAll('.sp-item')];
+  const cur = items.findIndex(el => el.classList.contains('chosen'));
+  let next = key === 'ArrowDown' ? cur + 1 : cur - 1;
+  next = Math.max(0, Math.min(items.length - 1, next));
+  selectCandidate(lang, activeSuggestLine, +items[next].dataset.idx);
+}
+
+function closeSP(lang) {
+  document.getElementById('sp-' + lang).classList.remove('open');
+  activeSuggestLine = -1;
+}
+
+function clearAll() {
+  LANGS.forEach(l => {
+    const ta = document.getElementById('ta-' + l);
+    ta.value = '';
+    ta.classList.remove('out');
+    if (l !== 'oct') ta.setAttribute('readonly','');
+    closeSP(l);
+  });
+  lineChoices = {};
+  lastCandidates = [];
+  srcLang = 'oct';
+  document.getElementById('mc').textContent = '0 matched';
+  document.getElementById('mc').className = '';
+  document.getElementById('hintL').textContent = 'Start typing — suggestions appear after 1 character';
+  document.getElementById('hintR').textContent = '';
+  document.getElementById('st1').textContent = 'Waiting...';
+  document.getElementById('st2').textContent = '';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toggleTheme() {
+  const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = t;
+  document.getElementById('themeBtn').textContent = t==='dark'?'☀ Light':'🌙 Dark';
+  localStorage.setItem('lct5',t);
+}
+const sv = localStorage.getItem('lct5');
+if (sv) { document.documentElement.dataset.theme=sv; document.getElementById('themeBtn').textContent=sv==='dark'?'☀ Light':'🌙 Dark'; }
+
+// Init: non-oct cols are output-only
+LANGS.forEach(l => {
+  if (l!=='oct') { document.getElementById('ta-'+l).setAttribute('readonly',''); document.getElementById('ta-'+l).classList.add('out'); }
+});
+</script>
+</body>
+</html>

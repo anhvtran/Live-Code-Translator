@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cheatsheet: Octave / Python / Julia</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Sora:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  [data-theme="dark"] {
+    --bg: #0f1117; --bg2: #181b24; --bg3: #1e2130;
+    --border: #2a2e3f; --text: #e2e4ef; --muted: #7b82a0; --accent: #5dcaa5;
+    --oct: #1d9e75; --oct-bg: #0a2e22; --oct-code: #7fdfba; --oct-hover: #0f2820;
+    --py:  #378add; --py-bg:  #0a1e35; --py-code:  #7bbfef; --py-hover:  #0c1c2a;
+    --jl:  #7f77dd; --jl-bg:  #1a1830; --jl-code:  #b0aaee; --jl-hover:  #17162a;
+    --jlp: #ef9f27; --jlp-bg: #2a1e08; --jlp-code: #f5c97a; --jlp-hover: #261e0a;
+    --td2-bg: #0c1e18; --td3-bg: #0a1520; --td4-bg: #131220; --td5-bg: #1e1608;
+    --note-bg: #181b24; --toggle-bg: #2a2e3f; --toggle-text: #e2e4ef;
+  }
+  [data-theme="light"] {
+    --bg: #f5f6fa; --bg2: #eceef5; --bg3: #e2e4ef;
+    --border: #c8cce0; --text: #1a1d2e; --muted: #6b7099; --accent: #0f7a5a;
+    --oct: #0c6e50; --oct-bg: #d6f5eb; --oct-code: #0a5a40; --oct-hover: #c2eedd;
+    --py:  #1a5fa0; --py-bg:  #d6eafb; --py-code:  #174e88; --py-hover:  #bfddfa;
+    --jl:  #4a42b5; --jl-bg:  #e8e6fa; --jl-code:  #3a3495; --jl-hover:  #d5d2f7;
+    --jlp: #8a5c00; --jlp-bg: #fdf0d0; --jlp-code: #7a5000; --jlp-hover: #fbe5b0;
+    --td2-bg: #e8f8f2; --td3-bg: #e6f2fc; --td4-bg: #eeecfc; --td5-bg: #fdf5e2;
+    --note-bg: #eceef5; --toggle-bg: #e2e4ef; --toggle-text: #1a1d2e;
+  }
+
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); padding: 2rem; font-size: 14px; line-height: 1.6; transition: background 0.2s, color 0.2s; }
+
+  .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; gap: 1rem; }
+  h1 { font-size: 22px; font-weight: 600; color: var(--accent); margin-bottom: 0.25rem; letter-spacing: -0.5px; }
+  .subtitle { color: var(--muted); font-size: 13px; }
+
+  .toggle-btn { display: flex; align-items: center; gap: 8px; background: var(--toggle-bg); color: var(--toggle-text); border: 1px solid var(--border); border-radius: 20px; padding: 6px 16px; font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: opacity 0.15s; }
+  .toggle-btn:hover { opacity: 0.75; }
+  .sun { display: none; } .moon { display: inline; }
+  [data-theme="light"] .sun { display: inline; }
+  [data-theme="light"] .moon { display: none; }
+
+  .legend { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem; }
+  .tag { display: inline-flex; align-items: center; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; font-family: 'Sora', sans-serif; }
+  .t-oct { background: var(--oct-bg); color: var(--oct); border: 1px solid var(--oct); }
+  .t-py  { background: var(--py-bg);  color: var(--py);  border: 1px solid var(--py); }
+  .t-jl  { background: var(--jl-bg);  color: var(--jl);  border: 1px solid var(--jl); }
+  .t-jlp { background: var(--jlp-bg); color: var(--jlp); border: 1px solid var(--jlp); }
+
+  .section { margin-bottom: 2.5rem; }
+  .section-title { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+
+  /* 3-col tables (non-plot sections) */
+  table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+  th { font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 500; padding: 8px 12px; text-align: left; background: var(--bg3); color: var(--muted); border: 1px solid var(--border); }
+  td { padding: 8px 12px; border: 1px solid var(--border); vertical-align: top; color: var(--text); line-height: 1.7; transition: background 0.15s; }
+
+  /* 3-col layout */
+  .t3 th:first-child { width: 16%; }
+  .t3 th:nth-child(2), .t3 th:nth-child(3), .t3 th:nth-child(4) { width: 28%; }
+  .t3 td:first-child { font-family: 'Sora', sans-serif; font-size: 11.5px; color: var(--muted); background: var(--bg2); font-weight: 500; }
+  .t3 td:nth-child(2) { background: var(--td2-bg); }
+  .t3 td:nth-child(3) { background: var(--td3-bg); }
+  .t3 td:nth-child(4) { background: var(--td4-bg); }
+  .t3 tr:hover td:first-child { color: var(--text); }
+  .t3 tr:hover td:nth-child(2) { background: var(--oct-hover); }
+  .t3 tr:hover td:nth-child(3) { background: var(--py-hover); }
+  .t3 tr:hover td:nth-child(4) { background: var(--jl-hover); }
+  .t3 td:nth-child(2) code { color: var(--oct-code); }
+  .t3 td:nth-child(3) code { color: var(--py-code); }
+  .t3 td:nth-child(4) code { color: var(--jl-code); }
+
+  /* 4-col layout (plot sections) */
+  .t4 th:first-child { width: 13%; }
+  .t4 th:nth-child(2), .t4 th:nth-child(3), .t4 th:nth-child(4), .t4 th:nth-child(5) { width: 21.75%; }
+  .t4 td:first-child { font-family: 'Sora', sans-serif; font-size: 11.5px; color: var(--muted); background: var(--bg2); font-weight: 500; }
+  .t4 td:nth-child(2) { background: var(--td2-bg); }
+  .t4 td:nth-child(3) { background: var(--td3-bg); }
+  .t4 td:nth-child(4) { background: var(--td4-bg); }
+  .t4 td:nth-child(5) { background: var(--td5-bg); }
+  .t4 tr:hover td:first-child { color: var(--text); }
+  .t4 tr:hover td:nth-child(2) { background: var(--oct-hover); }
+  .t4 tr:hover td:nth-child(3) { background: var(--py-hover); }
+  .t4 tr:hover td:nth-child(4) { background: var(--jl-hover); }
+  .t4 tr:hover td:nth-child(5) { background: var(--jlp-hover); }
+  .t4 td:nth-child(2) code { color: var(--oct-code); }
+  .t4 td:nth-child(3) code { color: var(--py-code); }
+  .t4 td:nth-child(4) code { color: var(--jl-code); }
+  .t4 td:nth-child(5) code { color: var(--jlp-code); }
+
+  /* REPL table: 4 cols but different meaning */
+  .t-repl th:first-child { width: 14%; }
+  .t-repl th:nth-child(2) { width: 20%; }
+  .t-repl th:nth-child(3) { width: 20%; }
+  .t-repl th:nth-child(4) { width: 23%; }
+  .t-repl th:nth-child(5) { width: 23%; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; white-space: pre-wrap; word-break: break-all; display: block; line-height: 1.8; }
+  code .c { color: var(--muted); font-style: italic; }
+
+  .note { font-size: 11.5px; color: var(--muted); margin-top: 1.5rem; padding: 0.75rem 1rem; border-left: 2px solid var(--accent); background: var(--note-bg); border-radius: 0 6px 6px 0; line-height: 2; }
+  .note strong { color: var(--accent); }
+  .plot-note { font-size: 11px; color: var(--muted); font-style: italic; margin-bottom: 0.5rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Cheatsheet: Octave / Python / Julia</h1>
+    <p class="subtitle">Syntax comparison — vectors, matrices, plots, file I/O</p>
+  </div>
+  <button class="toggle-btn" onclick="toggleTheme()">
+    <span class="moon">&#9790; Dark</span>
+    <span class="sun">&#9728; Light</span>
+  </button>
+</div>
+
+<div class="legend">
+  <span class="tag t-oct">Octave / MATLAB</span>
+  <span class="tag t-py">Python / NumPy</span>
+  <span class="tag t-jl">Julia</span>
+  <span style="color:var(--muted);font-size:12px;align-self:center;">— plot sections also show:</span>
+  <span class="tag t-jl">Julia + Plots.jl</span>
+  <span class="tag t-jlp">Julia + PyPlot</span>
+</div>
+
+<!-- VECTOR & MATRIX -->
+<div class="section">
+<div class="section-title">Vector &amp; Matrix — basics</div>
+<table class="t3">
+<tr><th>Operation</th><th><span class="tag t-oct">Octave</span></th><th><span class="tag t-py">Python</span></th><th><span class="tag t-jl">Julia</span></th></tr>
+<tr><td>Row vector</td><td><code>v = [1 2 3]</code></td><td><code>v = np.array([1,2,3])</code></td><td><code>v = [1 2 3]</code></td></tr>
+<tr><td>Column vector</td><td><code>v = [1;2;3]</code></td><td><code>v = np.array([[1],[2],[3]])</code></td><td><code>v = [1,2,3]</code></td></tr>
+<tr><td>Range</td><td><code>1:0.5:10</code></td><td><code>np.arange(1,10,0.5)</code></td><td><code>1:0.5:10</code></td></tr>
+<tr><td>Linspace</td><td><code>linspace(0,1,100)</code></td><td><code>np.linspace(0,1,100)</code></td><td><code>range(0,1,100)</code></td></tr>
+<tr><td>Matrix</td><td><code>A = [1 2;3 4]</code></td><td><code>A = np.array([[1,2],[3,4]])</code></td><td><code>A = [1 2;3 4]</code></td></tr>
+<tr><td>Zeros</td><td><code>zeros(3,4)</code></td><td><code>np.zeros((3,4))</code></td><td><code>zeros(3,4)</code></td></tr>
+<tr><td>Ones</td><td><code>ones(3,4)</code></td><td><code>np.ones((3,4))</code></td><td><code>ones(3,4)</code></td></tr>
+<tr><td>Identity</td><td><code>eye(3)</code></td><td><code>np.eye(3)</code></td><td><code>using LinearAlgebra
+I(3)</code></td></tr>
+<tr><td>Random [0,1)</td><td><code>rand(3,4)</code></td><td><code>np.random.rand(3,4)</code></td><td><code>rand(3,4)</code></td></tr>
+<tr><td>Random normal</td><td><code>randn(3,4)</code></td><td><code>np.random.randn(3,4)</code></td><td><code>randn(3,4)</code></td></tr>
+</table>
+</div>
+
+<!-- SIZE & LENGTH -->
+<div class="section">
+<div class="section-title">Size &amp; Length</div>
+<table class="t3">
+<tr><th>Operation</th><th><span class="tag t-oct">Octave</span></th><th><span class="tag t-py">Python</span></th><th><span class="tag t-jl">Julia</span></th></tr>
+<tr><td>Full size</td>
+  <td><code>s = size(A)
+<span class="c">% [nrow ncol]</span></code></td>
+  <td><code>s = A.shape
+<span class="c"># (nrow, ncol)</span></code></td>
+  <td><code>s = size(A)
+<span class="c"># (nrow, ncol)</span></code></td>
+</tr>
+<tr><td>Number of rows</td><td><code>s = size(A, 1)</code></td><td><code>s = A.shape[0]</code></td><td><code>s = size(A, 1)</code></td></tr>
+<tr><td>Number of cols</td><td><code>s = size(A, 2)</code></td><td><code>s = A.shape[1]</code></td><td><code>s = size(A, 2)</code></td></tr>
+<tr><td>Vector length</td><td><code>n = length(v)</code></td><td><code>n = len(v)</code></td><td><code>n = length(v)</code></td></tr>
+<tr><td>Total elements</td><td><code>n = numel(A)</code></td><td><code>n = A.size</code></td><td><code>n = prod(size(A))</code></td></tr>
+<tr><td>Num dimensions</td><td><code>ndims(A)</code></td><td><code>A.ndim</code></td><td><code>ndims(A)</code></td></tr>
+</table>
+</div>
+
+<!-- FILENAME CONSTRUCTION -->
+<div class="section">
+<div class="section-title">Filename construction</div>
+<table class="t3">
+<tr><th>Operation</th><th><span class="tag t-oct">Octave</span></th><th><span class="tag t-py">Python</span></th><th><span class="tag t-jl">Julia</span></th></tr>
+<tr><td>Build from variables</td>
+  <td><code>n = 1; m = 2;
+fname = ['TBLG_n', ...
+  num2str(n), 'm', ...
+  num2str(m), '.mat'];</code></td>
+  <td><code>n, m = 1, 2
+fname = f"TBLG_n{n}m{m}.mat"</code></td>
+  <td><code>n, m = 1, 2
+fname = "TBLG_n$(n)m$(m).mat"</code></td>
+</tr>
+<tr><td>Zero-padded number</td>
+  <td><code>fname = sprintf(
+  'file_%03d.mat', i);</code></td>
+  <td><code>fname = f"file_{i:03d}.mat"</code></td>
+  <td><code>fname = "file_$(lpad(string(i),3,'0')).mat"</code></td>
+</tr>
+<tr><td>Current script folder</td>
+  <td><code>fileparts(
+  mfilename('fullpath'))</code></td>
+  <td><code>import os
+os.path.dirname(
+  os.path.abspath(__file__))</code></td>
+  <td><code>@__DIR__
+<span class="c"># folder of current script</span></code></td>
+</tr>
+<tr><td>Full path + filename</td>
+  <td><code>fpath = fullfile(
+  dir, fname);</code></td>
+  <td><code>fpath = os.path.join(
+  dir, fname)</code></td>
+  <td><code>fpath = joinpath(
+  @__DIR__, fname)</code></td>
+</tr>
+<tr><td>cd inside code</td>
+  <td><code>cd('C:/path/to/dir')
+<span class="c">% relative to script:</span>
+cd(fileparts(
+  mfilename('fullpath')))</code></td>
+  <td><code>os.chdir('C:/path/to/dir')
+<span class="c"># relative to script:</span>
+os.chdir(os.path.dirname(
+  os.path.abspath(__file__)))</code></td>
+  <td><code>cd("C:/path/to/dir")
+<span class="c"># relative to script:</span>
+cd(@__DIR__)</code></td>
+</tr>
+<tr><td>Relative cd navigation</td>
+  <td><code>cd('codes')
+cd('..')
+cd('outputs')</code></td>
+  <td><code>os.chdir('codes')
+os.chdir('..')
+os.chdir('outputs')</code></td>
+  <td><code>cd("codes")
+cd("..")
+cd("outputs")</code></td>
+</tr>
+<tr><td>cd relative to script</td>
+  <td><code>base = fileparts(
+  mfilename('fullpath'));
+cd(fullfile(base,'codes'))</code></td>
+  <td><code>base = os.path.dirname(
+  os.path.abspath(__file__))
+os.chdir(
+  os.path.join(base,'codes'))</code></td>
+  <td><code>cd(joinpath(
+  @__DIR__, "codes"))</code></td>
+</tr>
+<tr><td>Use in loop</td>
+  <td><code>for i = 1:5
+  f = ['data_',...
+    num2str(i),'.mat'];
+  save(f, 'A');
+end</code></td>
+  <td><code>for i in range(1,6):
+  f = f"data_{i}.mat"
+  scipy.io.savemat(f,
+    {'A': A})</code></td>
+  <td><code>for i in 1:5
+  f = "data_$(i).mat"
+  matwrite(f,
+    Dict("A"=>A))
+end</code></td>
+</tr>
+</table>
+</div>
+
+<!-- CONCATENATION -->
+<div class="section">
+<div class="section-title">Concatenation (hcat / vcat)</div>
+<table class="t3">
+<tr><th>Operation</th><th><span class="tag t-oct">Octave</span></th><th><span class="tag t-py">Python</span></th><th><span class="tag t-jl">Julia</span></th></tr>
+<tr><td>vcat (stack rows)</td><td><code>[A; B]</code></td><td><code>np.vstack([A,B])</code></td><td><code>vcat(A,B)</code></td></tr>
+<tr><td>hcat (stack cols)</td><td><code>[A B]</code></td><td><code>np.hstack([A,B])</code></td><td><code>hcat(A,B)</code></td></tr>
+<tr><td>Append in loop</td><td><code>E = [E, val]</code></td><td><code>E.append(val)</code></td><td><code>push!(E, val)</code></td></tr>
+<tr><td>Init empty</td><td><code>E = []</code></td><td><code>E = []</code></td><td><code>E = Float64[]</code></td></tr>
+</table>
+</div>
+
+<!-- INDEXING & FILTERING -->
+<div class="section">
+<div class="section-title">Indexing &amp; Filtering</div>
+<table class="t3">
+<tr><th>Operation</th><th><span class="tag t-oct">Octave</span></th><th><span class="tag t-py">Python</span></th><th><span class="tag t-jl">Julia</span></th></tr>
+<tr><td>Element [i,j]</td><td><code>A(i,j)</code></td><td><code>A[i-1,j-1]</code></td><td><code>A[i,j]</code></td></tr>
+<tr><td>Entire row i</td><td><code>A(i,:)</code></td><td><code>A[i-1,:]</code></td><td><code>A[i,:]</code></td></tr>
+<tr><td>Entire col j</td><td><code>A(:,j)</code></td><td><code>A[:,j-1]</code></td><td><code>A[:,j]</code></td></tr>
+<tr><td>Filter by condition</td>
+  <td><code>id = find(a(:,1)>2);
+d = a(id,:);</code></td>
+  <td><code>id = a[:,0] > 2
+d = a[id,:]</code></td>
+  <td><code>id = a[:,1] .> 2
+d = a[id,:]</code></td>
+</tr>
+<tr><td>Sort by column 3</td><td><code>a = sortrows(a,3);</code></td><td><code>a = a[a[:,2].argsort()]</code></td><td><code>a = a[sortperm(a[:,3]),:]</code></td></tr>
+<tr><td>Sort rows by col 1</td>
+  <td><code>a = sortrows(a);</code></td>
+  <td><code>a = a[a[:,0].argsort()]</code></td>
+  <td><code>a = sortslices(a, dims=1)
+<span class="c"># sorts rows by col 1</span></code></td>
+</tr>
+<tr><td>Sort cols by row 1</td>
+  <td><code>a = sortrows(a')';</code></td>
+  <td><code>a = a[:,a[0,:].argsort()]</code></td>
+  <td><code>a = sortslices(a, dims=2)
+<span class="c"># sorts cols by row 1</span></code></td>
+</tr>
+</table>
+</div>
+
+<!-- MATRIX OPERATIONS -->
+<div class="section">
+<div class="section-title">Matrix operations</div>
+<table class="t3">
+<tr><th>Operation</th><th><span class="tag t-oct">Octave</span></th><th><span class="tag t-py">Python</span></th><th><span class="tag t-jl">Julia</span></th></tr>
+<tr><td>Matrix multiply</td><td><code>A * B</code></td><td><code>A @ B</code></td><td><code>A * B</code></td></tr>
+<tr><td>Element-wise multiply</td><td><code>A .* B</code></td><td><code>A * B</code></td><td><code>A .* B</code></td></tr>
+<tr><td>Square all elements</td><td><code>A .^ 2</code></td><td><code>A ** 2</code></td><td><code>A .^ 2</code></td></tr>
+<tr><td>Square column 2</td><td><code>A(:,2) .^ 2</code></td><td><code>A[:,1] ** 2</code></td><td><code>A[:,2] .^ 2</code></td></tr>
+<tr><td>Transpose</td><td><code>A'</code></td><td><code>A.T</code></td><td><code>A'</code></td></tr>
+<tr><td>Diagonalization (all)</td>
+  <td><code>[V,D] = eig(A)</code></td>
+  <td><code>D,V = np.linalg.eig(A)</code></td>
+  <td><code>using LinearAlgebra
+D,V = eigen(A)</code></td>
+</tr>
+<tr><td>Partial eigen (k largest)</td>
+  <td><code>[V,D] = eigs(A, k)</code></td>
+  <td><code>import scipy.sparse.linalg
+D,V = scipy.sparse.linalg.eigs(
+  A, k=6)</code></td>
+  <td><code>using Arpack
+D,V = eigs(A, nev=6)</code></td>
+</tr>
+<tr><td>Partial eigen (k smallest)</td>
+  <td><code>[V,D] = eigs(A, k,
+  'smallestabs')</code></td>
+  <td><code>D,V = scipy.sparse.linalg.eigs(
+  A, k=6, which='SM')</code></td>
+  <td><code>D,V = eigs(A, nev=6,
+  which=:SM)
+<span class="c"># :LM=largest, :SM=smallest</span></code></td>
+</tr>
+<tr><td>Determinant</td><td><code>det(A)</code></td><td><code>np.linalg.det(A)</code></td><td><code>det(A)</code></td></tr>
+<tr><td>Trace</td><td><code>trace(A)</code></td><td><code>np.trace(A)</code></td><td><code>tr(A)</code></td></tr>
+<tr><td>Solve Ax = b</td><td><code>x = A \ b</code></td><td><code>x = np.linalg.solve(A,b)</code></td><td><code>x = A \ b</code></td></tr>
+</table>
+</div>
+
+<!-- ACCUMULATE IN LOOP -->
+<div class="section">
+<div class="section-title">Accumulate data in loop</div>
+<table class="t3">
+<tr><th>Operation</th><th><span class="tag t-oct">Octave</span></th><th><span class="tag t-py">Python</span></th><th><span class="tag t-jl">Julia</span></th></tr>
+<tr><td>Append horizontally</td>
+  <td><code>E1 = [];
+for i = 1:10
+  E1 = [E1, i^2];
+end</code></td>
+  <td><code>E1 = []
+for i in range(1,11):
+  E1.append(i**2)
+E1 = np.array(E1)</code></td>
+  <td><code>E1 = Float64[]
+for i in 1:10
+  push!(E1, i^2)
+end</code></td>
+</tr>
+<tr><td>Append vertically</td>
+  <td><code>E2 = [];
+for i = 1:10
+  E2 = [E2; i^2];
+end</code></td>
+  <td><code>E2 = []
+for i in range(1,11):
+  E2.append([i**2])
+E2 = np.array(E2)</code></td>
+  <td><code>E2 = Float64[]
+for i in 1:10
+  push!(E2, i^2)
+end</code></td>
+</tr>
+</table>
+</div>
+
+<!-- FUNCTIONS -->
+<div class="section">
+<div class="section-title">Functions — define &amp; call</div>
+<table class="t3">
+<tr><th>Operation</th><th><span class="tag t-oct">Octave</span></th><th><span class="tag t-py">Python</span></th><th><span class="tag t-jl">Julia</span></th></tr>
+<tr><td>Define function</td>
+  <td><code>function y = sq(x)
+  y = x .^ 2;
+end</code></td>
+  <td><code>def sq(x):
+  return x ** 2</code></td>
+  <td><code>function sq(x)
+  return x .^ 2
+end</code></td>
+</tr>
+<tr><td>One-liner</td>
+  <td><code><span class="c">% not supported</span></code></td>
+  <td><code>sq = lambda x: x**2</code></td>
+  <td><code>sq(x) = x .^ 2</code></td>
+</tr>
+<tr><td>Multiple return values</td>
+  <td><code>function [a,b] = f(x)
+  a = x + 1;
+  b = x - 1;
+end
+[a, b] = f(x)</code></td>
+  <td><code>def f(x):
+  return x+1, x-1
+
+a, b = f(x)</code></td>
+  <td><code>function f(x)
+  return x+1, x-1
+end
+
+a, b = f(x)</code></td>
+</tr>
+<tr><td>Default arguments</td>
+  <td><code>function y = f(x, n)
+  if nargin < 2; n=2; end
+  y = x .^ n;
+end</code></td>
+  <td><code>def f(x, n=2):
+  return x ** n</code></td>
+  <td><code>function f(x, n=2)
+  return x .^ n
+end</code></td>
+</tr>
+<tr><td>Keyword arguments</td>
+  <td><code><span class="c">% not supported</span></code></td>
+  <td><code>def f(x, scale=1.0):
+  return x * scale
+
+f(x, scale=2.0)</code></td>
+  <td><code>function f(x; scale=1.0)
+  <span class="c"># ; separates kwargs</span>
+  return x * scale
+end
+f(x, scale=2.0)</code></td>
+</tr>
+<tr><td>Anonymous function</td>
+  <td><code>f = @(x) x.^2 + 1</code></td>
+  <td><code>f = lambda x: x**2 + 1</code></td>
+  <td><code>f = x -> x.^2 + 1</code></td>
+</tr>
+<tr><td>Apply to array (broadcast)</td>
+  <td><code>y = arrayfun(@sq, v)</code></td>
+  <td><code>y = np.vectorize(sq)(v)</code></td>
+  <td><code>y = sq.(v)
+<span class="c"># dot . = broadcast</span></code></td>
+</tr>
+</table>
+</div>
+
+<!-- FOR LOOPS -->
+<div class="section">
+<div class="section-title">For loops</div>
+<table class="t3">
+<tr><th>Operation</th><th><span class="tag t-oct">Octave</span></th><th><span class="tag t-py">Python</span></th><th><span class="tag t-jl">Julia</span></th></tr>
+<tr><td>Basic loop</td>
+  <td><code>for i = 1:10
+  disp(i)
+end</code></td>
+  <td><code>for i in range(1,11):
+  print(i)</code></td>
+  <td><code>for i in 1:10
+  println(i)
+end</code></td>
+</tr>
+<tr><td>Loop over rows of matrix</td>
+  <td><code>for i = 1:size(a,1)
+  row = a(i,:);
+end</code></td>
+  <td><code>for i in range(len(a)):
+  row = a[i,:]</code></td>
+  <td><code>for i in 1:size(a,1)
+  row = a[i,:]
+end</code></td>
+</tr>
+<tr><td>Loop with step</td>
+  <td><code>for i = 1:2:10
+  <span class="c">% step of 2</span>
+end</code></td>
+  <td><code>for i in range(1,11,2):
+  pass <span class="c"># step of 2</span></code></td>
+  <td><code>for i in 1:2:10
+  <span class="c"># step of 2</span>
+end</code></td>
+</tr>
+<tr><td>Loop over vector</td>
+  <td><code>for x = v
+  disp(x)
+end</code></td>
+  <td><code>for x in v:
+  print(x)</code></td>
+  <td><code>for x in v
+  println(x)
+end</code></td>
+</tr>
+<tr><td>Index + value</td>
+  <td><code>for i = 1:length(v)
+  x = v(i);
+end</code></td>
+  <td><code>for i, x in enumerate(v):
+  print(i, x)</code></td>
+  <td><code>for (i, x) in enumerate(v)
+  println(i, " ", x)
+end</code></td>
+</tr>
+<tr><td>Nested loop</td>
+  <td><code>for i = 1:m
+  for j = 1:n
+    a(i,j) = i+j;
+  end
+end</code></td>
+  <td><code>for i in range(m):
+  for j in range(n):
+    a[i,j] = i+j</code></td>
+  <td><code>for i in 1:m, j in 1:n
+  a[i,j] = i+j
+end</code></td>
+</tr>
+<tr><td>While loop</td>
+  <td><code>while x > 0
+  x = x - 1;
+end</code></td>
+  <td><code>while x > 0:
+  x = x - 1</code></td>
+  <td><code>while x > 0
+  x = x - 1
+end</code></td>
+</tr>
+<tr><td>Break / Continue</td>
+  <td><code>for i = 1:10
+  if i==5; break; end
+  if i==3; continue; end
+end</code></td>
+  <td><code>for i in range(1,11):
+  if i==5: break
+  if i==3: continue</code></td>
+  <td><code>for i in 1:10
+  i==5 && break
+  i==3 && continue
+end</code></td>
+</tr>
+</table>
+</div>
+
+<!-- BASIC PLOTS — 4 cols -->
+<div class="section">
+<div class="section-title">Basic plots</div>
+<p class="plot-note">Plot sections use 4 columns: Octave | Python | Julia + Plots.jl | Julia + PyPlot</p>
+<table class="t4">
+<tr><th>Operation</th><th><span class="tag t-oct">Octave</span></th><th><span class="tag t-py">Python</span></th><th><span class="tag t-jl">Julia / Plots</span></th><th><span class="tag t-jlp">Julia / PyPlot</span></th></tr>
+<tr><td>Line plot</td><td><code>plot(x, y)</code></td><td><code>plt.plot(x, y)</code></td><td><code>plot(x, y)</code></td><td><code>PyPlot.plot(x, y)</code></td></tr>
+<tr><td>Dot / marker</td>
+  <td><code>plot(x, y, 'ro')</code></td>
+  <td><code>plt.plot(x, y, 'ro')</code></td>
+  <td><code>scatter(x, y,
+  color=:red,
+  marker=:circle)</code></td>
+  <td><code>PyPlot.plot(x, y, "ro")</code></td>
+</tr>
+<tr><td>Scatter (colored)</td>
+  <td><code>scatter(x,y,20,
+  c,'filled')</code></td>
+  <td><code>plt.scatter(x,y,
+  s=20, c=c)</code></td>
+  <td><code>scatter(x, y,
+  zcolor=c,
+  markersize=4)</code></td>
+  <td><code>PyPlot.scatter(x,y,
+  s=20, c=c)</code></td>
+</tr>
+<tr><td>Hold on</td><td><code>hold on</code></td><td><code><span class="c"># automatic</span></code></td><td><code>plot!(...)</code></td><td><code><span class="c"># automatic</span></code></td></tr>
+<tr><td>Axis equal</td><td><code>axis equal</code></td><td><code>plt.axis('equal')</code></td><td><code>plot(aspect_ratio=:equal)</code></td><td><code>PyPlot.axis("equal")</code></td></tr>
+<tr><td>Log y-axis</td><td><code>semilogy(x, y)</code></td><td><code>plt.semilogy(x, y)</code></td><td><code>plot(x, y,
+  yscale=:log10)</code></td><td><code>PyPlot.semilogy(x, y)</code></td></tr>
+<tr><td>Labels &amp; title</td>
+  <td><code>xlabel('x')
+ylabel('y')
+title('t')</code></td>
+  <td><code>plt.xlabel('x')
+plt.ylabel('y')
+plt.title('t')</code></td>
+  <td><code>plot(xlabel="x",
+  ylabel="y",
+  title="t")</code></td>
+  <td><code>PyPlot.xlabel("x")
+PyPlot.ylabel("y")
+PyPlot.title("t")</code></td>
+</tr>
+<tr><td>Save figure</td><td><code>saveas(gcf,'f.png')</code></td><td><code>plt.savefig('f.png',
+  dpi=300)</code></td><td><code>savefig(fig, "f.png")</code></td><td><code>PyPlot.savefig("f.png",
+  dpi=300)</code></td></tr>
+<tr><td>3-col matrix example</td>
+  <td><code>plot(a(:,1),a(:,2),'ro')
+axis equal
+hold on
+scatter(a(:,1),a(:,2),
+  20,a(:,3),'filled')</code></td>
+  <td><code>plt.plot(a[:,0],a[:,1],'ro')
+plt.axis('equal')
+plt.scatter(a[:,0],a[:,1],
+  s=20, c=a[:,2])</code></td>
+  <td><code>scatter(a[:,1],a[:,2],
+  color=:red,
+  aspect_ratio=:equal)
+scatter!(a[:,1],a[:,2],
+  zcolor=a[:,3],
+  markersize=4)</code></td>
+  <td><code>PyPlot.plot(a[:,1],a[:,2],"ro")
+PyPlot.axis("equal")
+PyPlot.scatter(a[:,1],a[:,2],
+  s=20, c=a[:,3])</code></td>
+</tr>
+<tr><td>Colorbar</td><td><code>colorbar</code></td><td><code>plt.colorbar()</code></td><td><code>scatter!(x, y,
+  zcolor=c,
+  colorbar=true)</code></td><td><code>PyPlot.colorbar()</code></td></tr>
+<tr><td>Colorbar with label</td>
+  <td><code>cb = colorbar;
+cb.Label.String='value';</code></td>
+  <td><code>cb = plt.colorbar()
+cb.set_label('value')</code></td>
+  <td><code>scatter!(x, y,
+  zcolor=c,
+  colorbar=true,
+  colorbar_title="value")</code></td>
+  <td><code>cb = PyPlot.colorbar()
+cb.set_label("value")</code></td>
+</tr>
+<tr><td>Colormap</td>
+  <td><code>colormap(jet)
+colormap(hot)</code></td>
+  <td><code>plt.set_cmap('jet')</code></td>
+  <td><code>scatter!(x, y,
+  zcolor=c, color=:jet)
+<span class="c"># :jet :hot :viridis :gray</span></code></td>
+  <td><code>PyPlot.set_cmap("jet")
+<span class="c"># "viridis" "plasma" "hot"</span></code></td>
+</tr>
+<tr><td>Colorbar limits</td><td><code>caxis([0 1])</code></td><td><code>plt.clim(0, 1)</code></td><td><code>scatter!(x, y,
+  zcolor=c, clims=(0,1))</code></td><td><code>PyPlot.clim(0, 1)</code></td></tr>
+<tr><td>Legend</td>
+  <td><code>legend('c1','c2')</code></td>
+  <td><code>plt.legend()</code></td>
+  <td><code>plot(x, y, label="c1")
+plot!(x, y2, label="c2")</code></td>
+  <td><code>PyPlot.plot(x,y,label="c1")
+PyPlot.legend()</code></td>
+</tr>
+<tr><td>Grid</td><td><code>grid on</code></td><td><code>plt.grid(True)</code></td><td><code>plot(x, y, grid=true)</code></td><td><code>PyPlot.grid(true)</code></td></tr>
+<tr><td>xlim / ylim</td>
+  <td><code>xlim([0 10])
+ylim([0 100])</code></td>
+  <td><code>plt.xlim(0, 10)
+plt.ylim(0, 100)</code></td>
+  <td><code>plot(x, y,
+  xlims=(0,10),
+  ylims=(0,100))</code></td>
+  <td><code>PyPlot.xlim(0, 10)
+PyPlot.ylim(0, 100)</code></td>
+</tr>
+<tr><td>Font size</td>
+  <td><code>set(gca,'FontSize',14)</code></td>
+  <td><code>plt.rcParams[
+  'font.size'] = 14</code></td>
+  <td><code>plot(x, y,
+  guidefont=font(14),
+  tickfont=font(12))</code></td>
+  <td><code>PyPlot.rc("font", size=14)</code></td>
+</tr>
+<tr><td>Set xticks (5 values)</td>
+  <td><code>set(gca,'XTick',
+  linspace(0,10,5))</code></td>
+  <td><code>ticks=np.linspace(0,10,5)
+plt.xticks(ticks)</code></td>
+  <td><code>plot(x, y,
+  xticks=range(0,10,5))</code></td>
+  <td><code>PyPlot.xticks(
+  range(0,10,5))</code></td>
+</tr>
+<tr><td>Auto nice ticks (~5)</td>
+  <td><code><span class="c">% default behavior in MATLAB</span></code></td>
+  <td><code>from matplotlib.ticker import
+  MaxNLocator
+ax = plt.gca()
+ax.xaxis.set_major_locator(
+  MaxNLocator(nbins=5))
+ax.yaxis.set_major_locator(
+  MaxNLocator(nbins=5))</code></td>
+  <td><code><span class="c"># Plots.jl auto-selects
+# nice ticks by default</span></code></td>
+  <td><code>from matplotlib.ticker import
+  MaxNLocator
+ax = PyPlot.gca()
+ax.xaxis.set_major_locator(
+  MaxNLocator(nbins=5))</code></td>
+</tr>
+<tr><td>Custom tick values</td>
+  <td><code>set(gca,'XTick',
+  [0 2 5 8 10])</code></td>
+  <td><code>plt.xticks([0,2,5,8,10])</code></td>
+  <td><code>plot(x, y,
+  xticks=[0,2,5,8,10])</code></td>
+  <td><code>PyPlot.xticks(
+  [0,2,5,8,10])</code></td>
+</tr>
+<tr><td>Tick labels (text)</td>
+  <td><code>set(gca,'XTick',[1 2 3],
+  'XTickLabel',
+  {'a','b','c'})</code></td>
+  <td><code>plt.xticks([1,2,3],
+  ['a','b','c'])</code></td>
+  <td><code>plot(x, y,
+  xticks=[1,2,3],
+  xticklabels=["a","b","c"])</code></td>
+  <td><code>PyPlot.xticks([1,2,3],
+  ["a","b","c"])</code></td>
+</tr>
+<tr><td>Turn off ticks</td>
+  <td><code>set(gca,'XTick',[])
+set(gca,'YTick',[])</code></td>
+  <td><code>plt.xticks([])
+plt.yticks([])</code></td>
+  <td><code>plot(x, y,
+  xticks=:none,
+  yticks=:none)</code></td>
+  <td><code>PyPlot.xticks([])
+PyPlot.yticks([])</code></td>
+</tr>
+<tr><td>Colorbar ticks (5 values)</td>
+  <td><code>cb = colorbar;
+cb.Ticks=linspace(0,1,5);</code></td>
+  <td><code>cb = plt.colorbar()
+cb.set_ticks(
+  np.linspace(0,1,5))</code></td>
+  <td><code>scatter!(x, y,
+  zcolor=c, colorbar=true,
+  colorbar_ticks=
+  range(0,1,5))</code></td>
+  <td><code>cb = PyPlot.colorbar()
+cb.set_ticks(
+  np.linspace(0,1,5))</code></td>
+</tr>
+<tr><td>Turn off colorbar ticks</td>
+  <td><code>cb = colorbar;
+cb.Ticks = [];</code></td>
+  <td><code>cb = plt.colorbar()
+cb.set_ticks([])</code></td>
+  <td><code>scatter!(x, y,
+  zcolor=c,
+  colorbar=false)</code></td>
+  <td><code>cb = PyPlot.colorbar()
+cb.set_ticks([])</code></td>
+</tr>
+</table>
+</div>
+
+<!-- FIGURE MANAGEMENT — 4 cols -->
+<div class="section">
+<div class="section-title">Figure management (figure 1, 2, ..., 100)</div>
+<table class="t4">
+<tr><th>Operation</th><th><span class="tag t-oct">Octave</span></th><th><span class="tag t-py">Python</span></th><th><span class="tag t-jl">Julia / Plots</span></th><th><span class="tag t-jlp">Julia / PyPlot</span></th></tr>
+<tr><td>Create figure n</td>
+  <td><code>figure(1)</code></td>
+  <td><code>plt.figure(1)</code></td>
+  <td><code>figs = Dict{Int,Any}()
+figs[1] = plot(
+  title="Figure 1")</code></td>
+  <td><code>PyPlot.figure(1)</code></td>
+</tr>
+<tr><td>Draw into figure n</td>
+  <td><code>figure(1)
+plot(x, y)</code></td>
+  <td><code>plt.figure(1)
+plt.plot(x, y)</code></td>
+  <td><code>plot!(figs[1], x, y,
+  label="x²")
+display(figs[1])</code></td>
+  <td><code>PyPlot.figure(1)
+PyPlot.plot(x, y)</code></td>
+</tr>
+<tr><td>Multiple figures</td>
+  <td><code>figure(1)
+figure(2)
+figure(100)</code></td>
+  <td><code>plt.figure(1)
+plt.figure(2)
+plt.figure(100)</code></td>
+  <td><code>figs[1]   = plot(title="Figure 1")
+figs[2]   = plot(title="Figure 2")
+figs[100] = plot(title="Figure 100")</code></td>
+  <td><code>PyPlot.figure(1)
+PyPlot.figure(2)
+PyPlot.figure(100)</code></td>
+</tr>
+<tr><td>Add to existing figure</td>
+  <td><code>figure(1)
+hold on
+plot(x, y2)</code></td>
+  <td><code>plt.figure(1)
+plt.plot(x, y2)</code></td>
+  <td><code>plot!(figs[1], x, y2,
+  label="y2")</code></td>
+  <td><code>PyPlot.figure(1)
+PyPlot.plot(x, y2)</code></td>
+</tr>
+<tr><td>Display figure n</td>
+  <td><code><span class="c">% auto-display</span></code></td>
+  <td><code>plt.figure(1)
+plt.show()</code></td>
+  <td><code>display(figs[1])</code></td>
+  <td><code>PyPlot.figure(1)
+display(PyPlot.gcf())</code></td>
+</tr>
+<tr><td>Close all</td><td><code>close all</code></td><td><code>plt.close('all')</code></td><td><code><span class="c"># not needed</span></code></td><td><code>PyPlot.close("all")</code></td></tr>
+</table>
+</div>
+
+<!-- PUBLICATION FORMAT -->
+<div class="section">
+<div class="section-title">Publication-quality figure format (IOP / journal style)</div>
+<p class="plot-note">Plot sections use 4 columns: Octave | Python | Julia + Plots.jl | Julia + PyPlot</p>
+<table class="t4">
+<tr><th>Operation</th><th><span class="tag t-oct">Octave</span></th><th><span class="tag t-py">Python</span></th><th><span class="tag t-jl">Julia / Plots</span></th><th><span class="tag t-jlp">Julia / PyPlot</span></th></tr>
+<tr><td>Figure width (IOP single / double column)</td>
+  <td><code>w_single = 8.5/2.54;
+w_double = 15/2.54;
+<span class="c">% in inches</span></code></td>
+  <td><code>w_single = 8.5 / 2.54
+w_double = 15 / 2.54
+<span class="c"># in inches</span></code></td>
+  <td><code>w_single = 8.5 / 2.54
+w_double = 15 / 2.54
+<span class="c"># in inches</span></code></td>
+  <td><code>w_single = 8.5 / 2.54
+w_double = 15 / 2.54
+<span class="c"># in inches</span></code></td>
+</tr>
+<tr><td>Set all rcParams (IOP style)</td>
+  <td><code><span class="c">% set individually:</span>
+set(0,'DefaultAxesFontSize',10)
+set(0,'DefaultLineLineWidth',1.2)
+set(0,'DefaultAxesLineWidth',0.8)</code></td>
+  <td><code>plt.rcParams.update({
+  "font.size": 10,
+  "axes.labelsize": 10,
+  "legend.fontsize": 8,
+  "xtick.labelsize": 9,
+  "ytick.labelsize": 9,
+  "axes.linewidth": 0.8,
+  "lines.linewidth": 1.2,
+  "lines.markersize": 4,
+  "xtick.direction": "in",
+  "ytick.direction": "in",
+  "xtick.major.size": 3,
+  "ytick.major.size": 3,
+  "figure.dpi": 300,
+  "savefig.dpi": 300,
+})</code></td>
+  <td><code>default(
+  fontsize=10,
+  guidefontsize=10,
+  legendfontsize=8,
+  tickfontsize=9,
+  linewidth=1.2,
+  markersize=4,
+  framestyle=:box,
+  tick_direction=:in,
+  dpi=300)</code></td>
+  <td><code>PyPlot.rcParams.update(Dict(
+  "font.size" => 10,
+  "axes.labelsize" => 10,
+  "legend.fontsize" => 8,
+  "xtick.labelsize" => 9,
+  "ytick.labelsize" => 9,
+  "axes.linewidth" => 0.8,
+  "lines.linewidth" => 1.2,
+  "lines.markersize" => 4,
+  "xtick.direction" => "in",
+  "ytick.direction" => "in",
+  "xtick.major.size" => 3,
+  "ytick.major.size" => 3,
+  "figure.dpi" => 300,
+  "savefig.dpi" => 300,
+))</code></td>
+</tr>
+<tr><td>Create figure with aspect ratio</td>
+  <td><code>nrows=1; ncols=2;
+w = 15/2.54;
+aspect = 0.85*(nrows/ncols);
+figure('Units','inches',
+  'Position',[0 0 w w*aspect])</code></td>
+  <td><code>nrows, ncols = 1, 2
+w = 15 / 2.54
+aspect = 0.85 * (nrows/ncols)
+fig, axs = plt.subplots(
+  nrows, ncols,
+  figsize=(w, w*aspect))</code></td>
+  <td><code>nrows, ncols = 1, 2
+w = 15 / 2.54
+aspect = 0.85*(nrows/ncols)
+fig = plot(
+  layout=(nrows,ncols),
+  size=(w*96, w*aspect*96))
+<span class="c"># 96 px/inch approx</span></code></td>
+  <td><code>nrows, ncols = 1, 2
+w = 15 / 2.54
+aspect = 0.85*(nrows/ncols)
+fig, axs = PyPlot.subplots(
+  nrows, ncols,
+  figsize=(w, w*aspect))</code></td>
+</tr>
+<tr><td>Ticks inward, both sides</td>
+  <td><code>set(gca,
+  'TickDir','in',
+  'Box','on')</code></td>
+  <td><code>ax.tick_params(
+  direction='in',
+  top=True,
+  right=True)</code></td>
+  <td><code>plot(x, y,
+  tick_direction=:in,
+  framestyle=:box)</code></td>
+  <td><code>ax = PyPlot.gca()
+ax.tick_params(
+  direction="in",
+  top=true,
+  right=true)</code></td>
+</tr>
+<tr><td>Tight layout &amp; save</td>
+  <td><code>set(gcf,'PaperUnits',
+  'inches','PaperSize',
+  [w w*aspect])
+saveas(gcf,'fig.pdf')</code></td>
+  <td><code>plt.tight_layout()
+plt.savefig("fig.pdf",
+  bbox_inches="tight",
+  dpi=300)</code></td>
+  <td><code>savefig(fig, "fig.pdf",
+  dpi=300)</code></td>
+  <td><code>PyPlot.tight_layout()
+PyPlot.savefig("fig.pdf",
+  bbox_inches="tight",
+  dpi=300)</code></td>
+</tr>
+<tr><td>Save as PDF (vector) + PNG (raster)</td>
+  <td><code>print(gcf,'-dpdf','fig.pdf')
+print(gcf,'-dpng',
+  '-r300','fig.png')</code></td>
+  <td><code>plt.savefig("fig.pdf")
+plt.savefig("fig.png",
+  dpi=300)</code></td>
+  <td><code>savefig(fig, "fig.pdf")
+savefig(fig, "fig.png")</code></td>
+  <td><code>PyPlot.savefig("fig.pdf")
+PyPlot.savefig("fig.png",
+  dpi=300)</code></td>
+</tr>
+</table>
+</div>
+
+<!-- FILE I/O -->
+<div class="section">
+<div class="section-title">File I/O</div>
+<table class="t3">
+<tr><th>Operation</th><th><span class="tag t-oct">Octave</span></th><th><span class="tag t-py">Python</span></th><th><span class="tag t-jl">Julia</span></th></tr>
+<tr><td>Write .mat</td>
+  <td><code>save('f.mat','A','B')</code></td>
+  <td><code>import scipy.io
+scipy.io.savemat('f.mat',
+  {'A':A,'B':B})</code></td>
+  <td><code>using MAT
+matwrite("f.mat",
+  Dict("A"=>A,"B"=>B))</code></td>
+</tr>
+<tr><td>Read .mat</td>
+  <td><code>load('f.mat')</code></td>
+  <td><code>d = scipy.io.loadmat('f.mat')
+A = d['A']</code></td>
+  <td><code>d = matread("f.mat")
+A = d["A"]</code></td>
+</tr>
+<tr><td>Read .mat (robust, v7.3 fallback)</td>
+  <td><code><span class="c">% works for all versions</span>
+load('f.mat')</code></td>
+  <td><code>import scipy.io, subprocess
+
+def load_mat(f):
+  try:
+    return scipy.io.loadmat(f)
+  except:
+    f7 = f.replace('.mat','_v7.mat')
+    subprocess.run(['octave',
+      '--no-gui','--eval',
+      f"load('{f}');"
+      f"save('-v7','{f7}');"])
+    return scipy.io.loadmat(f7)</code></td>
+  <td><code><span class="c"># MAT.jl reads all versions
+# including v7.3 (HDF5)</span>
+using MAT
+d = matread("f.mat")</code></td>
+</tr>
+<tr><td>Write .txt</td><td><code>dlmwrite('f.txt', A)</code></td><td><code>np.savetxt('f.txt', A)</code></td><td><code>writedlm("f.txt", A, ',')</code></td></tr>
+<tr><td>Read .txt</td><td><code>dlmread('f.txt')</code></td><td><code>np.loadtxt('f.txt')</code></td><td><code>readdlm("f.txt", ',')</code></td></tr>
+<tr><td>Write .csv</td>
+  <td><code>csvwrite('f.csv', A)</code></td>
+  <td><code>np.savetxt('f.csv', A,
+  delimiter=',')</code></td>
+  <td><code>using CSV, DataFrames
+CSV.write("f.csv",
+  DataFrame(A,:auto))</code></td>
+</tr>
+<tr><td>Read .csv</td>
+  <td><code>csvread('f.csv')</code></td>
+  <td><code>import pandas as pd
+df = pd.read_csv('f.csv')</code></td>
+  <td><code>using CSV, DataFrames
+df = CSV.read("f.csv",
+  DataFrame)</code></td>
+</tr>
+</table>
+</div>
+
+<!-- REPL / SHELL — special 4-col with different meaning -->
+<div class="section">
+<div class="section-title">REPL &amp; Shell commands</div>
+<table class="t4 t-repl">
+<tr><th>Operation</th><th><span class="tag t-oct">Octave REPL</span></th><th><span class="tag t-py">IPython</span></th><th><span class="tag t-jl">Julia REPL</span></th><th><span class="tag t-jlp">Julia shell mode (;)</span></th></tr>
+<tr><td>Current directory</td><td><code>pwd</code></td><td><code>%pwd</code></td><td><code>pwd()</code></td><td><code>cd</code></td></tr>
+<tr><td>List files</td><td><code>ls
+dir</code></td><td><code>%ls</code></td><td><code>readdir()
+readdir(pwd())</code></td><td><code>dir
+<span class="c"># ls not on Windows</span></code></td></tr>
+<tr><td>Change directory</td><td><code>cd 'C:/path'</code></td><td><code>%cd C:/path</code></td><td><code>cd("C:/path")</code></td><td><code>cd C:\path</code></td></tr>
+<tr><td>Run script</td><td><code>run('script.m')
+<span class="c">% or: script</span></code></td><td><code>%run script.py</code></td><td><code>include("script.jl")</code></td><td><code><span class="c"># use include()
+# in Julia mode</span></code></td></tr>
+<tr><td>List .mat files</td><td><code>ls *.mat</code></td><td><code>%ls *.mat</code></td><td><code>filter(f->endswith(
+  f,".mat"), readdir())</code></td><td><code>dir *.mat</code></td></tr>
+<tr><td>Check file exists</td><td><code>exist('f','file')</code></td><td><code>os.path.isfile('f')</code></td><td><code>isfile("f.mat")</code></td><td><code><span class="c"># use Julia mode</span></code></td></tr>
+<tr><td>Home directory</td><td><code>cd ~</code></td><td><code>%cd ~</code></td><td><code>homedir()</code></td><td><code>cd %USERPROFILE%</code></td></tr>
+<tr><td>Clear screen</td><td><code>clc</code></td><td><code>%clear</code></td><td><code><span class="c"># Ctrl+L</span></code></td><td><code>cls</code></td></tr>
+<tr><td>Run shell command</td><td><code>system('dir')</code></td><td><code>!dir</code></td><td><code>run(`dir`)
+<span class="c"># backtick</span></code></td><td><code>dir</code></td></tr>
+<tr><td>Install package</td><td><code>pkg install -forge
+  pkg_name</code></td><td><code>%pip install pkg</code></td><td><code>using Pkg
+Pkg.add("Pkg")</code></td><td><code><span class="c"># press ] for pkg mode
+# add PackageName</span></code></td></tr>
+</table>
+</div>
+
+<div class="note">
+  <strong>Julia notes:</strong>
+  Index starts at <strong>1</strong> (like MATLAB, unlike Python) &nbsp;|&nbsp;
+  Dot <strong>.</strong> before operators required for element-wise ops: <code>.* &nbsp;./ &nbsp;.^</code> &nbsp;|&nbsp;
+  <strong>push!()</strong> replaces <code>[E; val]</code> in loops — no array copy, much faster &nbsp;|&nbsp;
+  <strong>plot!()</strong> with <code>!</code> = <code>hold on</code> in MATLAB &nbsp;|&nbsp;
+  String interpolation <code>"name_$(var).mat"</code> replaces <code>num2str()</code> &nbsp;|&nbsp;
+  <strong>@__DIR__</strong> = folder of current script (like <code>fileparts(mfilename('fullpath'))</code>)
+</div>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('cs_theme', html.dataset.theme);
+}
+const saved = localStorage.getItem('cs_theme');
+if (saved) document.documentElement.dataset.theme = saved;
+</script>
+</body>
+</html>
