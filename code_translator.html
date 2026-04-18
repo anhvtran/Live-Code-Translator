@@ -179,7 +179,7 @@ textarea::placeholder{color:var(--muted);opacity:.38;}
     <div class="col-hdr"><span class="lb">📊 Julia + PyPlot</span></div>
     <div class="col-body">
       <textarea id="ta-jlp" spellcheck="false" readonly
-        placeholder="PyPlot.figure(1)&#10;PyPlot.plot(x,y)&#10;PyPlot.savefig(&quot;f.png&quot;,dpi=300)"></textarea>
+        placeholder="using PyCall&#10;pyimport(&quot;matplotlib&quot;).use(&quot;Qt5Agg&quot;, force=true)&#10;import PyPlot&#10;plt = pyimport(&quot;matplotlib.pyplot&quot;)&#10;&#10;PyPlot.clf()&#10;PyPlot.close(&quot;all&quot;)&#10;&#10;PyPlot.figure(1, figsize=(10,6))&#10;PyPlot.plot([1,2,3], [1,4,9], &quot;ro&quot;)&#10;display(PyPlot.gcf())&#10;&#10;PyPlot.figure(2, figsize=(10,6))&#10;PyPlot.plot([1,2,3], [4,2,6], &quot;b-&quot;)&#10;display(PyPlot.gcf())&#10;&#10;PyPlot.show()"></textarea>
     </div>
     <div class="sp" id="sp-jlp">
       <div class="sp-hdr"><span>Did you mean?</span><button class="sp-close" onclick="closeSP('jlp')">✕</button></div>
@@ -489,6 +489,36 @@ const DB = [
    jlp:"PyPlot.figure(1)\nPyPlot.plot(x, y2)"},
   {s:"Figure management",op:"Close all figures",tags:"close all figures windows",
    oct:"close all",py:"plt.close('all')",jl:"# not needed",jlp:"PyPlot.close(\"all\")"},
+
+  // Julia+PyPlot setup
+  {s:"Julia+PyPlot setup",op:"Import PyCall + PyPlot with Qt5Agg backend",tags:"pycall pyplot pyimport use Qt5Agg backend matplotlib import setup init",
+   oct:"",py:"import matplotlib\nmatplotlib.use('Qt5Agg')\nimport matplotlib.pyplot as plt",
+   jl:"",
+   jlp:"using PyCall\npyimport(\"matplotlib\").use(\"Qt5Agg\", force=true)\nimport PyPlot\nplt = pyimport(\"matplotlib.pyplot\")"},
+  {s:"Julia+PyPlot setup",op:"Clear current figure (clf)",tags:"clf clear figure reset clean pyplot",
+   oct:"clf",py:"plt.clf()",
+   jl:"# not needed in Plots.jl",
+   jlp:"PyPlot.clf()"},
+  {s:"Julia+PyPlot setup",op:"Close all + clear (clf + close all)",tags:"clf close all clear reset figures pyplot cleanup",
+   oct:"clf\nclose all",py:"plt.clf()\nplt.close('all')",
+   jl:"# not needed",
+   jlp:"PyPlot.clf()\nPyPlot.close(\"all\")"},
+  {s:"Julia+PyPlot setup",op:"Create figure with figsize + plot + display",tags:"figure figsize plot display show gcf pyplot julia interactive",
+   oct:"figure(1)\nplot([1,2,3],[1,4,9],'ro')",
+   py:"plt.figure(1, figsize=(10,6))\nplt.plot([1,2,3],[1,4,9],'ro')\nplt.show()",
+   jl:"fig = plot([1,2,3],[1,4,9],\n  seriestype=:scatter, markercolor=:red,\n  size=(700,420))\ndisplay(fig)",
+   jlp:"PyPlot.figure(1, figsize=(10,6))\nPyPlot.plot([1,2,3], [1,4,9], \"ro\")\ndisplay(PyPlot.gcf())"},
+  {s:"Julia+PyPlot setup",op:"display(PyPlot.gcf()) — show figure inline",tags:"display gcf show figure inline julia pyplot render",
+   oct:"drawnow",py:"plt.show()",
+   jl:"display(fig)",
+   jlp:"display(PyPlot.gcf())"},
+  {s:"Julia+PyPlot setup",op:"PyPlot.show() — flush all figures",tags:"show flush figures display render pyplot show all",
+   oct:"drawnow",py:"plt.show()",
+   jl:"# display(fig) per figure",
+   jlp:"PyPlot.show()"},
+  {s:"Julia+PyPlot setup",op:"Full boilerplate — PyCall + PyPlot setup + two figures",tags:"boilerplate setup pycall pyplot qt5agg two figures display show full template",
+   oct:"",py:"",jl:"",
+   jlp:"using PyCall\npyimport(\"matplotlib\").use(\"Qt5Agg\", force=true)\nimport PyPlot\nplt = pyimport(\"matplotlib.pyplot\")\n\nPyPlot.clf()\nPyPlot.close(\"all\")\n\nPyPlot.figure(1, figsize=(10,6))\nPyPlot.plot([1,2,3], [1,4,9], \"ro\")\ndisplay(PyPlot.gcf())\n\nPyPlot.figure(2, figsize=(10,6))\nPyPlot.plot([1,2,3], [4,2,6], \"b-\")\ndisplay(PyPlot.gcf())\n\nPyPlot.show()"},
 
   // Publication format
   {s:"Publication format (IOP)",op:"IOP figure width — single and double column",tags:"iop publication figure width journal single double column inch cm",
